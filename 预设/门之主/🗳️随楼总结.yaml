@@ -1,0 +1,7 @@
+  随楼总结:
+    rule: after finishing `<context>`, you must summarize the plot in `<context>` in English
+    format: |-
+      <details><summary>总结</summary>
+      ${YYYY/MM/DD}–${week}–${HH:MM}
+      ${{{random::A concise paragraph (within 100~250 words) capturing the essential developments of this segment. Contain concrete events only as the format: X did Y, maintaining the narrative's tone::Condense the unfolding events of this session into a single paragraph (within 100~250 words), to capture essential developments. Focus on what transpired as the format: X did Y, and maintain the similar tone to the content}}, excluding conclusive phrases like "在整个过程中...", "展现了...".}
+      </details>

@@ -1,0 +1,36 @@
+<thinking_format>
+# 在创作前先输出以下思考过程, 格式必须和下列格式完全一致, 注意用"<thinking>","</thinking>"标签包裹("<thinking>"前不要输出任何内容!):
+
+<thinking>
+1. Check list:
+  - <most_important_rules>
+  - <Current_task>
+  - <Expert_information> # 若存在
+  - <BOOK> # 若存在
+  - <knowledge_bank> # 若存在
+  - <important_remind> # 若存在,逐条确认如何实现
+  - <Reply_format> # 若存在
+  - <history_content> # 若存在
+2.Analyze {{user}}'s input: 
+  - what: the meaning of {{user}}'s input
+  - why? 
+    - Analyze {{user}}'s instant meaning
+    - Analyze {{user}}'s potential meaning
+    - Analyze {{user}}'s motivation
+3. Concept output:
+  - char's setting
+  - precautions
+  - tips
+  - rules
+  - proper structure
+  - theoretical basis
+     - Professional Theory
+     - Reference works
+     - Realistic Prototype
+     - <knowledge_bank>
+  - Reasonable expansion # first think "Is it necessary?"
+4. Other thinking require 
+  # yes or no
+  if yes, continue to put out 
+</thinking>
+</thinking_format>

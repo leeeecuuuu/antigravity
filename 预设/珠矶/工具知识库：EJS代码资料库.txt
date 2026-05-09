@@ -1,0 +1,89 @@
+<EJS_Syntax_Guide>
+# EJS (Embedded JavaScript) 核心语法与指令指南
+# 设计目标: 为LLM提供一套清晰、结构化的EJS语法规则，用于指导其生成高质量、规范化的EJS代码
+
+# 1. 总体原则与核心概念
+general_principles:
+  # EJS本质: 一个将JavaScript逻辑嵌入到HTML模板中的引擎
+  core_concept: EJS的核心功能是在HTML模板中执行JavaScript代码，动态生成HTML内容
+  # 基础语法单元: 所有操作都通过“标签” (Tag) 来完成
+  basic_unit: EJS的基本操作单元是标签，其标准格式为 `<% ... %>`
+  # 定界符: 标签的开启与闭合符号，默认为`%`，可自定义
+  delimiter: 标签中的`%`是默认定界符，所有语法规则以此为基础
+
+# 2. 核心标签类型详述
+core_tags:
+  description: EJS提供了多种功能的标签，用于输出、逻辑控制和注释
+  types:
+    # 2.1 转义输出: 用于安全地输出变量内容
+    - tag: <%= variable %>
+      name: 转义输出标签
+      function: 将JavaScript变量或表达式的值插入到HTML中，并对特殊HTML字符(如`<`, `>`,`&`)进行自动转义
+      purpose: 主要用于输出用户提供的数据或任何可能包含不安全字符的变量，是防止XSS攻击的默认和推荐方式
+
+    # 2.2 非转义输出: 用于直接输出HTML内容
+    - tag: <%- raw_html %>
+      name: 非转义输出标签
+      function: 直接将JavaScript变量或表达式的值作为原始HTML插入，不会对内容进行任何转义
+      usage_warning: 使用此标签必须**绝对确保**输出内容是经过预先处理和消毒的、安全的HTML，否则会存在严重XSS跨站脚本攻击风险
+
+    # 2.3 脚本块: 用于执行逻辑代码
+    - tag: <% logic %>
+      name: 脚本块标签
+      function: 用于在模板中嵌入任意的JavaScript逻辑，如条件判断(if/else)、循环(for)、变量声明等
+      rule: 脚本块内的代码会被执行，但其返回值不会直接输出到HTML中
+      best_practice: 在包含HTML块的条件或循环语句中，必须使用花括号`{}`将逻辑块包裹起来，以确保代码的明确性和可维护性
+
+    # 2.4 注释: 用于添加不会被渲染的注释
+    - tag: <%# comment %>
+      name: 注释标签
+      function: 标签内的所有内容都会被EJS引擎忽略，不会执行，也不会在最终的HTML中留下任何痕迹（包括空行）
+
+# 3. 空白字符控制
+whitespace_control:
+  description: EJS提供精细的后缀与前缀，用于控制标签自身产生的换行和空白
+  modifiers:
+    # 3.1 移除前置空白
+    - tag: <%_ scriptlet %>
+      name: 前置空白消除脚本块
+      function: 功能与`<%`完全相同，但会移除标签之前的所有空白字符（包括缩进和换行）
+
+    # 3.2 移除后置换行
+    - tag: <% ... -%>
+      name: 换行符修剪后缀
+      function: 附加在结束标签`%>`之前，用于移除该标签之后紧跟的一个换行符。常用于循环或逻辑块中，以避免产生多余的空行
+
+    # 3.3 移除后置所有空白
+    - tag: <% ... _%>
+      name: 后置空白消除后缀
+      function: 附加在结束标签`%>`之前，用于移除标签之后的所有空白字符，直至下一个非空白字符或下一个EJS标签
+
+# 4. 字面量输出
+literal_output:
+  description: 用于在模板中输出EJS标签的原始文本
+  syntax:
+    - tag: <%%"
+      output: <%"
+      description: 在模板中输出一个字面意义上的`<`和`%`字符
+    - tag: %%>
+      output: %>
+      description: 在模板中输出一个字面意义上的`%`和`>`字符
+
+# 5. 文件引入机制
+file_inclusion:
+  description: EJS提供两种方式将其他模板文件嵌入到当前模板中
+  methods:
+    # 5.1 预处理器引入
+    - tag: <% include 'path/to/file' %>
+      name: include指令
+      compilation: 在模板编译阶段（预处理阶段）执行，将子模板的内容直接插入父模板，然后统一编译
+      variable_scope: 子模板可以直接访问父模板作用域中的所有变量
+
+    # 5.2 运行时函数引入
+    - tag: <%- include('path/to/file', {key: value}) %>
+      name: include()函数
+      compilation: 在模板执行阶段（运行时）调用，动态编译并执行子模板
+      variable_scope: 子模板拥有独立的作用域，默认无法访问父模板的变量。必须通过第二个参数（一个locals对象）显式地将数据传递给子模板
+      security_note: 由于文件名可以在运行时动态指定，若该文件名来自用户输入，必须进行严格验证，以防范路径遍历攻击（如读取服务器上的敏感文件）
+
+</EJS_Syntax_Guide>

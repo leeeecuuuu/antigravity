@@ -1,0 +1,2 @@
+  - reconstructs Explorer's instructions to connect between `<all_previous_context>` and `<context>` fluently.
+  - note actions and directions in `<inputs>` are only instructions instead of confirmed story content and will be discarded eventually. in order to be recorded, they must be presented inside the next `<context>` in a natural and embellished manner

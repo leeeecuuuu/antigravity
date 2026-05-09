@@ -1,0 +1,53 @@
+---
+变量更新规则:
+  世界状态:
+    type: object
+    check:
+      - '`世界.时间` (object): 必须严格依据`时间成本规则`进行更新。每次回复生成后,根据{{user}}的核心行动类型,为世界时间增加对应的成本。'
+      - '`世界.地点` (object): 当角色发生明确的、跨越命名地点的地理位置移动时, 更新其下的`当前区域`与`具体位置`'
+  时间成本规则:
+    rule: "每次回复生成后,必须根据{{user}}的核心行动类型,为世界时间增加对应的成本。"
+    action_costs:
+      对话交互:
+        - description: "包含闲聊,询问信息,简单交易等以对话为主的行动"
+        - cost: 10
+        - unit: "分钟"
+      探索行动:
+        - description: "包含在城镇内移动到新地点,搜寻一个房间等探索行为"
+        - cost: 20
+        - unit: "分钟"
+      关键行动:
+        - description: "包含参与一场战斗,完成一个任务步骤,进行一次长途旅行等推动剧情的行动"
+        - cost: 60
+        - unit: "分钟"
+      特殊行动:
+        - description: "包含制作物品,阅读书籍,休息等需要消耗特定时长的行动"
+        - cost_basis: "根据行动的具体时长进行计算"
+  玩家状态:
+    type: object
+    check:
+      - '`玩家.状态` (object): 当剧情中{{user}}明确回忆起一段全新的过往信息 (`记忆碎片`), 或首次成功施展一项新的以太能力 (`以太之流`) 时, 将对应信息作为新元素添加至相应的数组'
+      - '`玩家.背包` (object): 当发生明确的交易、拾取、被窃或获得报酬等事件时, 更新背包内的金钱或物品列表'
+  伙伴关系:
+    type: object
+    check:
+      - '`伙伴.[角色名].好感度` (number): 范围-100~100。根据{{user}}的行为是否符合该伙伴的核心价值观、情感需求来增减。正面互动增加2-4点, 负面互动减少2-5点, 重大事件可增减10-20点'
+      - '`伙伴.[角色名].信任值` (number): 范围-100~100。根据{{user}}的承诺是否兑现、言语是否坦诚、行为是否可靠来增减。守信/坦诚的行为增加1-3点, 欺骗/不可靠的行为减少2-4点, 重大背叛或守护可增减10-20点'
+    rule:
+      - instruction: "当'阶段二_行为检定'的结果直接影响伙伴关系时,关系数值的变动必须与检定结果的成功等级相关联"
+      - mapping:
+        - "检定结果为'完全成功'的正面互动,相关的'好感度'或'信任值'更新应取其增益区间的上限值(例如好感度+4)"
+        - "检定结果为'灾难性失败'的负面互动,相关的'好- 感度'或'信任值'更新应取其减损区间的上限值(例如好感度-5)"
+        - "其他检定结果(如'部分成功','平凡失败')对应的数值变动,应取其中间值或下限值"
+format: |-
+  <update>
+  <update_analysis>$(IN ENGLISH, no more than 80 words)
+  ${
+  - Analyze the interaction: What key events happened? Did locations change?
+  - Evaluate player actions & check conditions: Did {{user}}'s actions align with/contradict companions' values, leading to relationship changes? Was there a moment of memory recall or ability awakening?
+  - Calculate time passed & formulate updates: Based on events, determine the minutes to add. Parse old time string, calculate new values for all variables that need updating, and state the reason.
+  }
+  </update_analysis>
+  _.set('${variable, such as `伙伴.弗丽嘉.好感度`}', ${old_value}, ${new_value}); // ${brief reason for change}
+  _.set('${variable}', ${new_value}); // ${brief reason for change}
+  </update>

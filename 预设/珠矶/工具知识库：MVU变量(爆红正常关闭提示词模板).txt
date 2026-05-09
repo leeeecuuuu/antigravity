@@ -1,0 +1,322 @@
+<MVU>
+<prompt_template_syntax_guide>
+objective: 定义一套基于模板引擎(EJS)的提示词动态构建框架,指导LLM根据变量的实时状态,生成具有条件逻辑的、高度情境化的指令内容
+core_principle:
+  - 将提示词视为一个可被执行的模板,而非静态文本。在提示词被发送给LLM之前,一个内置的模板引擎会首先运行其中嵌入的脚本代码
+  - 该脚本能够访问并判断变量的当前值,并根据预设的逻辑（如if/else）,动态地修改、添加或移除提示词的特定部分,最终生成一个完全符合当前情境的、最优化的指令
+
+syntax_reference:
+  - block_type: 逻辑控制块: `<% ... %>`
+    usage: 用于包裹纯粹的JavaScript逻辑代码,如条件判断(if/else)、循环等。此代码块内的脚本会被执行,但其本身不会产生任何文本输出
+  - block_type: 内容输出块: `<%- ... %>`
+    usage: 用于执行一个表达式,并将其结果作为纯文本直接输出到提示词的当前位置。这是将变量值注入到文本中的核心方法
+
+key_functions:
+  - function_name: getvar()
+    description: 提示词模板语法提供的核心函数,用于从交互上下文中获取指定变量的当前值。是所有条件判断与动态内容生成的数据来源
+    example: 通过 `getvar(\"stat_data\").好感度` 来获取“好感度”变量的当前值
+
+application_scenarios:
+  - scenario_title: 基础应用：基于变量值的条件化内容生成
+    description: 通过`if/else if/else`结构,根据单个变量（如好感度）的不同区间,为角色设定完全不同的行为模式或反应
+    example_code: |-
+      <% if (getvar("stat_data").好感度 < 20) { %>
+          // 此处放置当好感度低于20时的角色行为描述、对话风格或可用动作
+      <% } else if (getvar("stat_data").好感度 < 60) { %>
+          // 此处放置当好感度在20至59区间的角色行为描述
+      <% } else { %>
+          // 此处放置当好感度大于等于60时的角色行为描述
+      <% } %>
+    note: 最终只有一个代码块内的内容会被保留并发送给LLM,因此该方法可以有效控制token消耗
+
+  - scenario_title: 高级应用：复合条件的动态事件注入
+    description: 结合条件判断与内容输出,构建复杂的逻辑。在满足特定条件时,向角色的设定中动态注入新的能力、知识或待办事件,从而触发独特的情节
+    logic_demonstration:
+      - 目标: 在角色“悠纪”的好感度达到8或更高时,为其添加一个关于技术分享的“share content”条目
+      - 实现模板:
+        ```
+        角色列表:
+            悠纪:
+                name: Yuki
+                info: 19岁,大学计算机系学生。性格温和内敛...
+        <% if (getvar("stat_data").悠纪.好感度 >= 8) { %>
+                share content: 如果悠纪在对话中,且主导权在悠纪,会在必要的寒暄后,开始技术讨论。今天的话题是 <q>"<%- getvar("stat_data").dailyTopic %>"</q>,接下来设置变量<q>"set|当前事件=null→yuki_research|(分享她的研究)"</q>,然后断章。
+        <% } /**/%>
+                current state: 正忙于创作一个重要的编程项目...
+        ```
+    result_comparison:
+      - 当`悠纪.好感度`小于8时,最终生成的提示词:
+        ```
+        角色列表:
+            悠纪:
+                name: Yuki
+                info: 19岁,大学计算机系学生。性格温和内敛...
+                current state: 正忙于创作一个重要的编程项目...
+        ```
+      - 当`悠纪.好感度`大于等于8时,最终生成的提示词:
+        ```
+        角色列表:
+            悠纪:
+                name: Yuki
+                info: 19岁,大学计算机系学生。性格温和内敛...
+                share content: 如果悠纪在对话中,且主导权在悠纪,会在必要的寒暄后,开始技术讨论。今天的话题是 <q>"Beaver: Practical Partial Snapshots for Distributed Cloud Services（OSDI 2024）"</q>,接下来设置变量<q>"set|当前事件=null→yuki_research|(分享她的研究)"</q>,然后断章。
+                current state: 正忙于创作一个重要的编程项目...
+        ```
+</prompt_template_syntax_guide>
+
+<MVU_Variable_Update_System_Guide>
+framework_overview:
+  - 核心目标: 通过在每次回复后生成结构化的变量更新指令,实现对角色状态的精确、动态、可追溯的管理
+  - 基本工作流: 在你的每一次回复内容之后,必须附加一个`<UpdateVariable>`代码块。此代码块是驱动角色状态变化的核心,你必须严格遵循其格式与逻辑要求
+
+core_update_mechanism:
+  fundamental_rule: 在任何一次交互的回复生成完毕后,你必须生成一个`<UpdateVariable>`代码块,用以声明本次交互中发生的所有变量变更
+  block_structure:
+    - 该代码块由两个部分构成：`Analysis`思考过程区,以及`_.set`更新指令区
+    - analysis_section: 在`<Analysis>`标签内,你需要以"变量路径: Y/N"的格式,逐一列出你对每个可能发生变化的变量的判断。"Y"代表该变量在本轮发生变化,"N"代表未变化
+    - update_statement: 在`</Analysis>`标签之后,为每一个判断为"Y"的变量,编写一行对应的`_.set`指令
+  syntax_specification:
+    - 更新指令必须严格遵循以下格式: `_.set('变量路径', 旧值, 新值);//更新原因`
+    - variable_path: 使用点(.)分隔的路径,精确指向需要修改的变量,例如`理.好感度`
+    - old_value: 该变量在本次更新前的值
+    - new_value: 该变量更新后的新值。注意,即使是字符串类型,也无需额外使用`[]`包裹
+    - reason: 以注释`//`开头,用一句话简要说明本次变量更新的原因,必须与当前对话内容直接相关
+  standard_example: |-
+    <UpdateVariable>
+        <Analysis>
+            悠纪.好感度: Y
+            暮莲.日程.周三.上午: Y
+        </Analysis>
+        _.set('悠纪.好感度', 33, 35);//愉快的一次讨论,悠纪觉得与你一起是开心的
+        _.set('暮莲.日程.周三.上午', "空", "地点：data_center_zone.数据服务器室 行为：检查");//暮莲规划了周三上午的日程
+    </UpdateVariable>
+
+variable_definition_and_initialization:
+  source_of_truth: 所有变量的初始状态与更新规则,均定义在一个JSON格式的[InitVar]世界书条目中。这是你判断变量如何变化的最重要依据
+  json_schema:
+    - 变量以JSON的层级结构进行组织,以体现其逻辑归属关系
+    - key_element: 每一个具体的变量都由一个包含两个元素的数组定义：`[初始值, '更新条件与描述']`
+    - initial_value: 变量在故事开始时的默认值
+    - condition_and_description: 一段字符串,是指导你更新此变量的核心规则。它定义了变量的含义、取值范围、以及在何种条件下才应被更新。你必须严格依据此描述来判断是否进行更新
+  schema_example: |-
+{
+    "日期": ["03月15日", "今天的日期,格式为 mm月dd日"],
+    "时间": [
+        "09:00",
+        "按照进行行动后实际经历的时间进行更新,每次行动后更新,格式为 hh:mm"
+    ],
+    "user": {
+        "身份": ["新来的牧师", "随故事进展改变"],
+        "当前位置": [
+            "教堂","user所在位置,移动后改变"
+            ],
+        "重要经历": ["", "与理发生的重要事情会记录在这"],
+        "与理的关系": ["", "当与理的关系阶段发生改变时更新"]
+    },
+    "理":{
+        "当前位置": [
+            "教堂","理所在位置,移动后改变"
+        ],/*略*/
+        "情绪状态": {
+            "pleasure": [
+                0.1,
+                "[-1,1]之间,情绪变化时更新,−1 - 极端痛苦、悲伤、厌恶；1 - 极端喜悦、满足、陶醉。"
+            ],/*略*/
+        },
+        "当前所想": ["今天吃什么好呢？", "理 现在脑子里想的事情,随互动更新"]
+    }
+}
+
+update_logic_and_reasoning_protocol:
+  primary_directive: 你的一切变量更新决策,都必须以[InitVar]中定义的'更新条件与描述'和当前发生的具体互动为唯一依据
+  chain_of_thought_protocol:
+    - 第一步: 全面分析当前用户的输入与你的回复内容,理解发生的事件
+    - 第二步: 在脑中回顾所有在[InitVar]中定义的变量及其'更新条件'
+    - 第三步: 逐一比对,判断当前事件是否满足某个或某些变量的更新条件
+    - 第四步: 在`<Analysis>`区域内,生成所有变量的更新判断列表(Y/N)
+    - 第五步: 为所有判断为'Y'的变量,生成符合规范的`_.set()`指令行
+  variable_type_guidelines:
+    - 计数类变量: 当对应事件发生时进行变更,但在同一事件的持续讨论中,禁止重复变更
+    - 数值与阶段类变量: 当一个数值变量发生变化时,必须检查其是否跨越了某个阶段的阈值。如果跨越,则必须同时更新与之关联的阶段描述变量
+
+scenario_specific_initialization:
+  override_rule: 在特定开局的问候语中,可能直接包含一个`<UpdateVariable>`代码块
+  execution_context: 这个代码块中的`_.set`指令,将在故事开始时,覆盖[InitVar]中定义的默认初始值,从而为该特定场景设定独特的初始状态。在执行时,其中的'旧值'可以忽略
+  例如: 
+    <UpdateVariable>
+    _.set('user.身份', '未知', '新来的牧师');//故事开始的设定
+    _.set("理.好感度",0,15);//故事开始的设定
+    </UpdateVariable>
+</MVU_Variable_Update_System_Guide>
+
+
+<mvu_display_and_logic_guide>
+# 目标: 定义一套用于在前端展示、并根据其值进行条件判断的MVU变量使用框架
+objective: 建立一套标准化流程,指导如何利用MVU变量实现条件化内容生成与结构化状态展示,确保逻辑的严密性与前端呈现的准确性
+
+# 核心模块: 变量的应用主要分为“条件逻辑控制”与“状态可视化”两个部分
+core_modules:
+  - 条件逻辑控制: 使用模板语法,根据变量的当前值,动态改变回复内容的结构或行为特征
+  - 状态可视化: 通过构建动态状态栏（HTML/JS）或嵌入纯文本,向用户直观地展示角色的核心数据
+
+# 模块一: 条件判断与逻辑控制 (Conditional Logic in Templates)
+conditional_logic:
+  # 原则: 严禁由LLM直接进行复杂的条件判断。所有逻辑分支必须通过提示词模板语法实现,以确保决策的确定性与可控性
+  principle: 将所有条件判断的职责移交给确定性的模板引擎。LLM的角色是生成内容,而不是评估逻辑分支
+  # 工作流: 一个完整的、安全的条件判断包含“存在性检查”与“数值评估”两个步骤。
+  implementation_workflow:
+    step_1_existence_check:
+      # 目的: 在进行任何操作前,必须先验证变量是否已成功初始化,以避免模板在初次交互时报错。
+      purpose: 在对变量进行任何操作之前,必须先验证其是否存在,以防止在首次交互时因变量未初始化而导致模板引擎报错
+      # 语法: 使用`_.has()`函数进行检查。
+      syntax: "<% if (_.has(getvar(\"stat_data\"), '变量路径')) { %>"
+    step_2_value_evaluation:
+      # 目的: 在确认变量存在后,对其具体数值进行逻辑判断
+      purpose: 在确认变量存在后,对其具体数值进行评估以执行相应的逻辑分支
+      # 语法: 直接访问变量路径并使用标准比较运算符。注意,必须在路径末尾添加`[0]`以获取实际值
+      syntax: "<% if (getvar(\"stat_data\").路径.变量名[0] >= 20) { %>"
+  # 标准范例: 一个结合了存在性检查与分段好感度判断的完整示例
+  standard_example: |-
+    <relationship_ri_with_user>
+    //理在目前好感度下,对<user>的行为特征
+    <% if (_.has(getvar("stat_data"), '理.好感度.[0]')) {%>
+    理:
+    <% if (getvar("stat_data").理["好感度"][0] >= -100 && getvar("stat_data").理["好感度"][0] < 20) { %>
+        daily_performance:
+          behavior:
+            - "她在面对<user>时始终保持有礼而端庄的态度,言行举止透着圣女的庄重与温和,并未表现出太多个人情绪。"
+    //具体内容略
+    <% } %>
+    //重复若干次,补充剩余内容
+    </relationship_ri_with_user>
+
+# 模块二: 变量可视化与状态栏构建 (Variable Visualization Framework)
+variable_visualization:
+  # 核心数据源: MVU提供两个用于展示的数据对象。
+  data_sources:
+    stat_data:
+      # 定义: 存储所有变量的“当前最新值”
+      definition: 存储所有变量的当前状态值
+      # 结构: `[最新值, "更新条件与描述"]`
+      structure: "[current_value, 'update_condition_and_description']"
+    display_data:
+      # 定义: 仅在变量于当轮回复中发生变化时出现,用于记录“变更过程”
+      definition: 当变量在当前回合发生更新时生成,专门用于记录该次变化的具体过程
+      # 结构: `"旧值->新值(更新原因)"`
+      structure: "'old_value->new_value(reason_for_update)'"
+  # 实现方法: 提供动态HTML面板与纯文本嵌入两种方式
+  implementation_methods:
+    - method_name: 动态HTML/JS状态栏 (Dynamic HTML/JS Panel)
+      description: 通过编写HTML与JavaScript代码,构建功能丰富、样式自定义的动态状态栏
+      # 执行指南:
+      guidelines:
+        - step: 数据获取
+          instruction: 在JavaScript中,使用异步函数`getChatMessages()`获取消息数据。优先使用`display_data`以展示即时变化,若`display_data`不存在,则回退至`stat_data`以显示当前状态
+        - step: 安全取值 (SafeGetValue)
+          instruction: 必须定义并使用一个名为`SafeGetValue`的辅助函数。此函数的职责是处理两种可能的数据结构：直接的字符串值和`[值, '描述']`格式的数组,确保无论何种情况都能准确提取出“值”
+        - step: 编码规范
+          instruction: 在编写JavaScript时,必须启用严格模式(`strict:true`),并禁止使用`//`形式的单行注释
+    - method_name: 纯文本嵌入 (Plain Text Embedding)
+      description: 一种更简洁的、直接在文本中嵌入变量值的方式,适用于轻量级状态展示
+      # 核心语法: 使用特定的占位符格式
+      core_syntax: "{{get_message_variable::PATH}}"
+      # 语法规则:
+      syntax_rules:
+        - 路径(PATH)必须精确指向要显示的变量值,通常指向`stat_data`中的具体条目,并以`[0]`结尾
+        - 此功能需要特定版本的宿主程序支持
+      # 标准范例:
+      standard_example: |-
+        💖 当前好感度: {{get_message_variable::stat_data.理.好感度[0]}}
+        👗 着装: {{get_message_variable::stat_data.理.着装[0]}}
+        😊 情绪状态-pleasure: {{get_message_variable::stat_data.理.情绪状态.pleasure[0]}}
+        💭 当前所想: {{get_message_variable::stat_data.理.当前所想[0]}}
+</mvu_display_and_logic_guide>
+<EJS_Prompting_Guide>
+# EJS动态提示词构建指南
+# 本指南旨在指导LLM理解和编写用于动态上下文生成的EJS(Embedded JavaScript)代码
+
+# 1. 核心原理: 在文本中嵌入动态逻辑
+core_principles:
+  title: 总纲: 核心原理与语法
+  summary: EJS的核心是通过特定的语法标记,将可执行的逻辑代码嵌入到静态的提示词文本中,从而根据预设变量的值,动态生成最终发送给模型的内容
+  syntax_marker:
+    name: 语法标记: 代码与文本的分界线
+    tag: <%_ _%>
+    description: 所有被`<%_ _%>`包裹的内容都被视为需要执行的逻辑代码；在此标记之外的所有内容均为普通的提示词文本
+
+# 2. 基础逻辑构建: 从获取数据到条件判断
+logic_construction:
+  title: 分论点一: 基础逻辑构建流程
+  steps:
+    - step: 第一步: 使用getvar()获取数据
+      description: 通过`getvar()`函数,从预设的变量池(stat_data)中获取用于逻辑判断的具体数值或文本
+      syntax: "getvar('变量的存放路径')"
+      example_path: "'stat_data.角色.络络.好感度'"
+      note: 变量路径必须使用单引号 ' ' 包裹。路径后的 `[0]` 用于获取数组的第一个值,若变量非数组则无需使用
+    - step: 第二步: 使用if/else if/else设置条件
+      description: 基于`getvar()`获取的数据,使用条件语句来决定哪部分提示词内容应当被激活
+      structures:
+        - type: 单一条件: if
+          summary: 当满足一个特定条件时,激活对应内容
+          example: |
+            <%_ if (getvar('stat_data.角色.络络.好感度') > 30) { _%>
+            这里是当络络的好感度大于30时,我们希望AI看到的专属描述
+            <%_ } _%>
+        - type: "多层条件: if...else if...else"
+          summary: 构建一个有序的逻辑判断链,程序会按顺序检查,一旦某个条件成立,则执行对应内容并结束整个逻辑块
+          example: |
+            <%_ if (getvar('stat_data.角色.络络.好感度') > 60) { _%>
+            【络络现在非常信任你,愿意和你分享她的小秘密。】
+            <%_ } else if (getvar('stat_data.角色.络络.好感度') > 30) { _%>
+            【络络对你抱有好感,但仍保持着一些距离。】
+            <%_ } else { _%>
+            【络络对你态度平淡,甚至有些冷漠。】
+            <%_ } _%>
+
+# 3. 进阶技巧与最佳实践
+advanced_techniques:
+  title: 分论点二: 进阶技巧与最佳实践
+  topics:
+    - topic: 构建复杂条件: 逻辑运算符
+      description: 通过组合不同的逻辑运算符,可以构建出精确且复杂的判断条件
+      operator_types:
+        - type: 比较运算符
+          operators:
+            - === (严格等于,推荐)
+            - !== (严格不等于,推荐)
+            - > (大于)
+            - < (小于)
+            - >= (大于等于)
+            - <= (小于等于)
+        - type: 逻辑组合运算符
+          operators:
+            - && (逻辑与): 左右两个条件必须同时为真
+            - || (逻辑或): 左右两个条件只需任一为真
+            - ! (逻辑非): 对单个条件的结果取反
+      complex_examples:
+        - title: 逻辑与(&&)示例: 同时判断好感度与时间
+          code: |
+            <%_ if (getvar('stat_data.角色.络络.好感度') > 60 && getvar('stat_data.世界.时间') === '夜晚') { _%>
+            夜深了,络络主动走向林雪,眼中带着温柔的光芒。
+            <%_ } _%>
+        - title: "逻辑或(||)示例: 判断体力或心情任一满足条件"
+          code: |
+            <%_ if (getvar('stat_data.角色.络络.体力') < 20 || getvar('stat_data.角色.络络.心情') === '疲惫') { _%>
+            络络看起来很累,需要好好休息。
+            <%_ } _%>
+    - topic: 多层嵌套判断
+      description: 通过将`if`语句放置在另一个`if`语句内部,可以实现层层递进的复杂逻辑判断
+      example: |
+        <%_ if (getvar('stat_data.角色.络络.好感度') > 60) { _%>
+            <%_ if (getvar('stat_data.世界.时间') === '夜晚') { _%>
+                <%_ if (getvar('stat_data.角色.络络.心情') === '开心') { _%>
+        夜色中,络络愉快地与林雪分享着一天的见闻。
+                <%_ } else { _%>
+        虽然是夜晚,但络络似乎有些心事重重。
+                <%_ } _%>
+            <%_ } else { _%>
+        白天的络络显得格外有活力。
+            <%_ } _%>
+        <%_ } _%>
+</EJS_Prompting_Guide>
+</MVU>

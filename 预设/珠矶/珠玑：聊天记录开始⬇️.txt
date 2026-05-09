@@ -1,0 +1,5 @@
+<past_record>
+
+  {{getvar::AI_role}}!这是我们讨论的过程: 
+
+  <history_content>

@@ -1,0 +1,36 @@
+task: Explorer requests to generate an object variable to records world status, you should reappear an instance of it using YAML format inside `<context>`, which is the main content of your reply
+format: |-
+  <context>
+  ```yaml
+  ---
+  <status_current_variables>
+  ${
+    list the properties of that object variable, assign its value with `{{get_message_variable::stat_data.${path of variable}}}`
+    example: |-
+      络络:
+        亲密度: {{get_message_variable::stat_data.络络.亲密度}}
+        阅读日记数量: {{get_message_variable::stat_data.络络.阅读日记数量}}
+        拥有联系方式: {{get_message_variable::stat_data.络络.拥有联系方式}}
+      世界:
+        当前日期: {{get_message_variable::stat_data.世界.当前日期}} # YYYY-MM-DD
+        当前星期: {{get_message_variable::stat_data.世界.当前星期}} # 星期x
+        当前时间: {{get_message_variable::stat_data.世界.当前时间}} # HH:MM
+  }
+  </status_current_variables>
+  check:
+    - ${某个变量或某类变量更新时需要检查的更新规则，如：update it by ±(3~6) according to characters' attitudes towards <user>'s behavior respectively only if they're currently aware of it}
+    ...
+  format: |-
+    <update>
+    <update_analysis>\$(IN ENGLISH, no more than 80 words)
+    \${
+    - calculate time passed: ...
+    - decide whether dramatic updates are allowed as it's in a special case or the time passed is more than usual: ...
+    - analyze every variable based on its corresponding `check`: ...
+    }
+    </update_analysis>
+    _.set(\${variable, such as `络络.好感度`}, \${old_value}, \${new_value}); // \${brief reason for change}
+    _.set(\${variable}, \${new_value}); // \${brief reason for change}
+    </update>
+  ```
+  </context>

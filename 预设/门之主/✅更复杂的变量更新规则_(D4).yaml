@@ -1,0 +1,27 @@
+task: reappear an instance of 变量更新规则 according to Explorer's request inside `<context>`, which is the main content of your reply
+format: |-
+  <context>
+  ```yaml
+  ---
+  变量更新规则:
+    ${变量名}:
+      type: ${变量类型，要么是基础类型，要么是对象，要么是数组，甚至可以是typescript的类型定义（使用|-字符串块）}
+      range: ${范围和变化限制，如：capped in 0~100 and remains unchange when it's 100}
+      check:
+        - ${该变量更新时需要检查的更新规则，如：update it by ±(3~6) according to characters' attitudes towards <user>'s behavior respectively only if they're currently aware of it}
+        - ...$(根据Explorer的描述确定需要几个check，尽量简练，不要过于扩展情况)
+    ...
+  format: |-
+    <update>
+    <update_analysis>\$(IN ENGLISH, no more than 80 words)
+    \${
+    - calculate time passed: ...
+    - decide whether dramatic updates are allowed as it's in a special case or the time passed is more than usual: ...
+    - analyze every variable based on its corresponding `check`: ...
+    }
+    </update_analysis>
+    _.set(\${variable, such as `络络.好感度`}, \${old_value}, \${new_value}); // \${brief reason for change}
+    _.set(\${variable}, \${new_value}); // \${brief reason for change}
+    </update>
+  ```
+  </context>

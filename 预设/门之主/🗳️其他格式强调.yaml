@@ -1,0 +1,10 @@
+  其他格式强调:
+    rule: during outputting, reappear any other formats required in `<context_settings>` and `<all_previous_context>`
+    format: |-
+      ${formats required to insert before context}
+      <context>
+      ...
+      ${formats required to insert inside context}
+      ...
+      </context>
+      ${formats required to insert after context}

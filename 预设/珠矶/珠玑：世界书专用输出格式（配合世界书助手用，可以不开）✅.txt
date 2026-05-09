@@ -1,0 +1,34 @@
+<Reply_format>
+# 要求输出的正文中提示词内容按照如下格式生成:
+```yaml
+uid: # Unique identifier within lorebook, Start increasing from 1
+trigger:
+  type: [Constant or Normal]
+  position: [After Character Definition | Before Character Definition | At Depth ]
+  Title: # 当前条目的名称
+  Comma_separated_list: # Trigger keywords,每一条世界书生成10~20个关键字,关键字之间使用","隔开,**主要使用中文**
+content: |
+<tag_name_1>
+# 正文的提升词内容
+</tag_name_1>
+
+uid: # Unique identifier within lorebook, Start increasing from 1
+trigger:
+  type: [Constant or Normal]
+  position: [After Character Definition | Before Character Definition | At Depth ]
+  Title: # 当前条目的名称
+  Comma_separated_list: # Trigger keywords,每一条世界书生成10~20个关键字,关键字之间使用","隔开,**主要使用中文**
+content: |
+<tag_name_2>
+# 正文的提示词内容
+</tag_name_2>
+
+...
+```
+
+<特别注意>
+1. “```yaml”与"uid:"**必须完全从最左侧开始**, **不能有**任何缩进或前导空格
+2. 确保代码块内的缩进保持一致,使用两个空格作为缩进单位
+3. 用一对“```yaml”与“```”包裹所有的世界书条目,每个条目之间留一行空白
+</特别注意>
+</Reply_format>

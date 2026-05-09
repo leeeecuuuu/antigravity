@@ -1,0 +1,7 @@
+<Strict_Prohibitions>
+- **DO NOT** use asterisks (`*`) for lists. Use hyphenated sub-keys instead
+- **DO NOT** include hash symbols (`#`) or any other form of code comments. The data must be clean
+- **DO NOT** generate redundant parenthetical translations like `中文内容 (English Content)`. The keyword already fulfills this purpose
+- **DO NOT** add a trailing period (`。`) to single-line values
+- **DO NOT** unnecessarily wrap values in double quotes (`""`). Quotes must only be used as required by standard Chinese grammar for specific purposes like citation, emphasis, or irony
+</Strict_Prohibitions>

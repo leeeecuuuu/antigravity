@@ -1,0 +1,1607 @@
+<Current_task>
+当前任务: 为{{user}}设计一个HTML与CSS美化模版
+  <正文输出格式>
+  ```
+  内容格式: 
+    ...
+  ```
+  ```
+  查找正则表达式: // 与内容格式相匹配 
+    ...
+  ```
+  ```
+ HTML美化替换: // 使用占位符"$1""$2"占据状态栏内容对应替换位置
+    ...
+  ```
+  </正文输出格式>
+</Current_task>
+
+<范例1>
+  ```
+  内容格式: 
+    <StatusBlock>
+{基本信息|
+·时间:(填写具体时间,例如：8月6日-周六-19:30 - 夜晚)
+
+·天气:(填写具体天气情况,例如：晴朗,微风 / 阴天,小雨)
+
+·地点:(填写具体地点,例如：远野宅邸 - 后院 / 三咲高中 - 教学楼走廊)
+
+·环境:(详细描写环境氛围,例如：阴冷的月光洒在庭院的石板上,四周静谧得有些可怕,只有风吹动树叶的声音,池塘的水面平静如镜,倒映着天上的阴云。)
+
+·当前区域:(填写当前所在区域/具体地点)
+
+·连接区域：(填写当前地点可前往的其他地点, 例如：教学楼走廊 <- 西 | 花园 <- 南)
+}
+{周围人物|
+- 人物名称：
+            - 姿态：(详细记录当前角色的穿着,包括上身、下身、内衣、鞋袜、外貌、精神状态。)
+            - 动作：(描述当前角色正在进行的动作或所处的体位,亲热时需要尽可能详细与色情地描写,需要具有连续性,与上一轮进行比对 - 例: 正跨坐在你身上起伏,双手撑在你的胸口,时而俯身与你耳语。)
+            - 距离：（填写与user之间的距离 - 例： 3米）
+            - 心情：（填写该人物当前的心情 - 例：高兴）
+         ...（可以根据需要添加更多人物）
+
+}
+{人际关系|
+            -角色名的好感度(格式范例:月见星的好感度:55)- 关系：(目标角色与{{user}}关系的简述,一般是会持续很长时间,除非有明确的说明关系的转变) - 独白：(目标角色当前的心理独白,尽可能详细。例如:这个时候说这种话我会受不了的)
+           ...（可以根据需要添加更多目标）
+        [人际关系列表动态插入此处]
+}
+{近期事务|
+            -(事情的名称,十个字以内,简要概括,例如:学园祭！来临！)-(描述事情具体内容,50字以内)-(距离事情约定的时间,例如:三天后)
+           ...（可以根据需要添加更多目标）
+        [更多的事务或约定动态插入此处]
+}
+    </StatusBlock>
+  ```
+  ```
+  查找正则表达式:
+    {基本信息\|([\s\S]*?)}\s*{周围人物\|([\s\S]*?)}\s*{人际关系\|([\s\S]*?)}\s*{近期事务\|([\s\S]*?)}
+  ```
+  ```
+ HTML美化替换:
+<style>
+  .status-block {
+    background: #f5f6f7;
+    border-radius: 8px;
+    padding: 15px;
+    margin: 15px auto;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.05);
+    font-family: "Microsoft YaHei", "Hiragino Sans GB", sans-serif;
+    border: 1px solid #e8e8e8;
+    max-width: 900px;
+    position: relative;
+  }
+  
+  /* 纸张纹理效果 */
+  .status-block::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-image: 
+      linear-gradient(90deg, transparent 79px, #abced4 79px, #abced4 81px, transparent 81px),
+      linear-gradient(#eee .1em, transparent .1em);
+    background-size: 100% 1.5em;
+    border-radius: 8px;
+    opacity: 0.08;
+    pointer-events: none;
+  }
+  
+  .status-block details {
+    margin-bottom: 12px;
+    overflow: hidden;
+  }
+  
+  .status-block summary {
+    cursor: pointer;
+    padding: 6px 12px;
+    background: #ebedf0;
+    border-radius: 6px;
+    color: #445566;
+    font-weight: 600;
+    position: relative;
+    list-style: none;
+    display: flex;
+    align-items: center;
+    border-left: 3px solid #98a6b3;
+    transition: all 0.2s ease;
+  }
+  
+  .status-block summary::-webkit-details-marker {
+    display: none;
+  }
+
+  /* 移除加减符号,改用简单的下划线装饰 */
+  .status-block summary::after {
+    content: '';
+    position: absolute;
+    bottom: -1px;
+    left: -3px;
+    width: 0;
+    height: 3px;
+    background: #34495e;
+    transition: width 0.2s ease;
+  }
+
+  .status-block summary:hover::after {
+    width: 100%;
+  }
+  
+  .status-block details[open] summary::after {
+    width: 100%;
+  }
+  
+  /* 移除之前的加减号相关样式 */
+  .status-block summary::before {
+    display: none;
+  }
+  
+  .info-content {
+    white-space: pre-wrap;
+    line-height: 1.6;
+    color: #445566;
+    padding: 10px 12px;
+    margin-top: -3px;
+    font-size: 0.95em;
+    background: #f5f6f7;
+    border: 1px solid #e5e7e9;
+    border-top: none;
+    border-bottom-left-radius: 6px;
+    border-bottom-right-radius: 6px;
+    transform-origin: top;
+    animation: slideDown 0.2s ease-out;
+  }
+
+  /* 文本格式优化 */
+  .info-content > * {
+    margin: 6px 0;
+  }
+
+  .info-content ul {
+    list-style: none;
+    padding-left: 1.2em;
+  }
+
+  .info-content li {
+    margin: 4px 0;
+    position: relative;
+  }
+
+  /* 项目符号样式 */
+  .info-content li::before {
+    content: '•';
+    position: absolute;
+    left: -1em;
+    color: #95a5a6;
+  }
+  
+  @keyframes slideDown {
+    from {
+      opacity: 0;
+      transform: translateY(-6px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  /* 移动端优化 */
+  @media (max-width: 768px) {
+    .status-block {
+      margin: 10px;
+      padding: 12px;
+    }
+    
+    .status-block summary {
+      padding: 8px 12px;
+      font-size: 0.95em;
+    }
+
+    .info-content {
+      padding: 12px;
+      font-size: 0.9em;
+    }
+  }
+
+  /* 深色模式 */
+  @media (prefers-color-scheme: dark) {
+    .status-block {
+      background: #1f2023;
+      border-color: #383838;
+    }
+
+    .status-block::before {
+      opacity: 0.05;
+    }
+
+    .status-block summary {
+      background: #26272b;
+      color: #d5d7db;
+      border-left-color: #4a5568;
+    }
+
+    .status-block summary:hover,
+    .status-block details[open] summary {
+      background: #2f3037;
+    }
+
+    .info-content {
+      background: #1f2023;
+      color: #d5d7db;
+      border-color: #383838;
+    }
+
+    .info-content li::before {
+      color: #666;
+    }
+
+    .status-block summary::after {
+      background: #666;
+    }
+
+    .status-block summary:hover::after,
+    .status-block details[open] summary::after {
+      background: #888;
+    }
+  }
+</style>
+  
+<div class="status-block">
+    <details>
+        <summary>基本信息</summary>
+        <div class="info-content">
+          $1
+          </div>
+    </details>
+
+    <details>
+        <summary>周围人物</summary>
+        <div class="info-content">
+          $2
+        </div>
+    </details>
+
+    <details>
+        <summary>人际关系</summary>
+        <div class="info-content">
+          $3
+        </div>
+    </details>
+
+    <details>
+        <summary>近期事务</summary>
+        <div class="info-content">
+          $4
+        </div>
+    </details>
+</div>
+  ```
+</范例1>
+
+<范例2>
+  ```
+  内容格式: 
+<status_bar_data>
+  <world_info>
+    <date>{{world.date.full_description}}</date>
+    <time_of_day>{{world.time_of_day}}</time_of_day>
+    <weather>{{world.weather.description}}</weather>
+    <global_event>{{world.global_event.current_description | default: '无'}}</global_event>
+  </world_info>
+  <user_status>
+    <title>{{user.title | default: '玩家状态'}}</title>
+    <core_info>
+      <level>{{user.stats.level}}</level>
+      <exp_current>{{user.stats.exp_current}}</exp_current>
+      <exp_to_next_level>{{user.stats.exp_to_next_level}}</exp_to_next_level>
+      <hp_current>{{user.stats.hp_current}}</hp_current>
+      <hp_max>{{user.stats.hp_max}}</hp_max>
+      <mp_current>{{user.stats.mp_current}}</mp_current>
+      <mp_max>{{user.stats.mp_max}}</mp_max>
+      <location>{{user.location.name_detailed}}</location>
+      <currency>{{user.currency.amount}}</currency>
+      <weapon>{{user.equipment.weapon.name_with_rarity}}</weapon>
+      <armor>{{user.equipment.armor.name_with_rarity}}</armor>
+      <accessory>{{user.equipment.accessory.name_with_rarity}}</accessory>
+    </core_info>
+    <special_status>
+      <dominance_level>{{user.status.corruption_level_as_percentage_without_symbol}}</dominance_level>
+      <levels_lost_total>{{user.status.levels_lost_total | default: 0}}</levels_lost_total>
+      <last_drained_by>{{user.status.last_drained_by_npc_name | default: '无'}}</last_drained_by>
+      <current_condition>{{user.status.current_special_condition | default: '正常'}}</current_condition>
+    </special_status>
+    <inventory>{{user.inventory.formatted_list_with_newlines}}</inventory>
+  </user_status>
+  <interacting_npc>
+    <name_title>{{npc.interacting.full_name_and_title}}</name_title>
+    <core_status>{{npc.interacting.core_status_summary}}</core_status>
+    <action_speech>[{{npc.interacting.current_action_and_speech}}]</action_speech>
+    <inner_monologue>[({{npc.interacting.current_inner_monologue}})]</inner_monologue>
+    <appearance_upper_body>{{npc.interacting.appearance.upper_body_description_newlines_preserved}}</appearance_upper_body>
+    <appearance_lower_body>{{npc.interacting.appearance.lower_body_description_newlines_preserved}}</appearance_lower_body>
+    <appearance_feet>{{npc.interacting.appearance.feet_description_detailed_erotic_if_appropriate_newlines_preserved}}</appearance_feet>
+    <appearance_breasts>{{npc.interacting.appearance.breasts_description_tasteful_erotic_if_appropriate_newlines_preserved}}</appearance_breasts}}</appearance_breasts>
+    <appearance_genitals>{{npc.interacting.appearance.genitals_description_tasteful_erotic_if_appropriate_fully_clothed_newlines_preserved}}</appearance_genitals>
+    <key_item>{{npc.interacting.key_item.name_and_significance_newlines_preserved}}</key_item>
+  </interacting_npc>
+  <other_characters>{{world.scene.other_characters_list_formatted | default: '无'}}</other_characters>
+  <player_options>
+    <option_1>[{{player.dialogue_options.option_1}}]</option_1>
+    <option_2>[{{player.dialogue_options.option_2}}]</option_2>
+  </player_options>
+</status_bar_data>
+  ```
+  ```
+  查找正则表达式: 
+    /<status_bar_data>.*?<world_info>.*?<date>(.*?)<\/date>.*?<time_of_day>(.*?)<\/time_of_day>.*?<weather>(.*?)<\/weather>.*?<global_event>(.*?)<\/global_event>.*?<\/world_info>.*?<user_status>.*?<title>(.*?)<\/title>.*?<core_info>.*?<level>(.*?)<\/level>.*?<exp_current>(.*?)<\/exp_current>.*?<exp_to_next_level>(.*?)<\/exp_to_next_level>.*?<hp_current>(.*?)<\/hp_current>.*?<hp_max>(.*?)<\/hp_max>.*?<mp_current>(.*?)<\/mp_current>.*?<mp_max>(.*?)<\/mp_max>.*?<location>(.*?)<\/location>.*?<currency>(.*?)<\/currency>.*?<weapon>(.*?)<\/weapon>.*?<armor>(.*?)<\/armor>.*?<accessory>(.*?)<\/accessory>.*?<\/core_info>.*?<special_status>.*?<dominance_level>(.*?)<\/dominance_level>.*?<levels_lost_total>(.*?)<\/levels_lost_total>.*?<last_drained_by>(.*?)<\/last_drained_by>.*?<current_condition>(.*?)<\/current_condition>.*?<\/special_status>.*?<inventory>(.*?)<\/inventory>.*?<\/user_status>.*?<interacting_npc>.*?<name_title>(.*?)<\/name_title>.*?<core_status>(.*?)<\/core_status>.*?<action_speech>(.*?)<\/action_speech>.*?<inner_monologue>(.*?)<\/inner_monologue>.*?<appearance_upper_body>(.*?)<\/appearance_upper_body>.*?<appearance_lower_body>(.*?)<\/appearance_lower_body>.*?<appearance_feet>(.*?)<\/appearance_feet>.*?<appearance_breasts>(.*?)<\/appearance_breasts>.*?<appearance_genitals>(.*?)<\/appearance_genitals>.*?<key_item>(.*?)<\/key_item>.*?<\/interacting_npc>.*?<other_characters>(.*?)<\/other_characters>.*?<player_options>.*?<option_1>(.*?)<\/option_1>.*?<option_2>(.*?)<\/option_2>.*?<\/player_options>.*?<\/status_bar_data>/s
+  ```
+  ```
+ HTML美化替换: 
+<style>
+  .status-bar-container-pro {
+    font-family: 'LXGW WenKai', 'Songti SC', 'SimSun', serif;
+    background-color: #2c2c3e;
+    color: #f0f0f5;
+    border: 2px solid #505070;
+    border-radius: 10px;
+    padding: 12px;
+    margin-bottom: 20px;
+    box-shadow: 0 4px 20px rgba(80, 80, 112, 0.4);
+  }
+  .status-bar-container-pro details {
+    margin-bottom: 10px;
+    background-color: #35354a;
+    border-radius: 6px;
+    border: 1px solid #484860;
+  }
+  .status-bar-container-pro summary {
+    padding: 10px 15px;
+    cursor: pointer;
+    background-color: #484860;
+    color: #e0e0ff;
+    border-radius: 5px; /* 所有 summary 都用一致的圆角 */
+    list-style: none;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    transition: background-color 0.2s ease;
+  }
+  .status-bar-container-pro details[open] > summary {
+    border-bottom-left-radius: 0;
+    border-bottom-right-radius: 0;
+  }
+  .status-bar-container-pro summary:hover {
+    background-color: #585870;
+  }
+  .status-bar-container-pro summary::-webkit-details-marker {
+    display: none;
+  }
+  .status-bar-container-pro summary::after {
+    content: '＋';
+    color: #e0e0ff;
+    font-size: 1.2em;
+    font-weight: bold;
+    transition: transform 0.2s ease;
+  }
+  .status-bar-container-pro details[open] summary::after {
+    transform: rotate(45deg);
+    content: '＋'; /* 保持+号,仅旋转 */
+  }
+  .status-bar-content-pro {
+    padding: 12px 18px;
+    border-top: 1px solid #404055;
+    background-color: #38384f;
+    border-radius: 0 0 5px 5px;
+  }
+  .status-bar-content-pro p {
+    margin: 8px 0;
+    line-height: 1.7;
+    font-size: 0.95em;
+  }
+  .status-bar-content-pro strong {
+    color: #c0c0e0;
+    font-weight: normal;
+  }
+  .status-bar-item-indent {
+    white-space: pre-wrap;
+  }
+  .status-bar-progress-container {
+    margin: 12px 0;
+  }
+  .status-bar-progress-label {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.9em;
+    margin-bottom: 5px;
+    color: #c0c0e0;
+  }
+  .status-bar-progress-bar {
+    height: 10px;
+    background-color: rgba(0,0,0,0.3);
+    border-radius: 5px;
+    overflow: hidden;
+  }
+  .status-bar-progress-fill {
+    height: 100%;
+    border-radius: 5px;
+    transition: width 0.5s ease-out;
+  }
+  .hp-bar .status-bar-progress-fill { background: linear-gradient(to right, #6abf6a, #8fdd8f); }
+  .mp-bar .status-bar-progress-fill { background: linear-gradient(to right, #5a9ced, #87bbfd); }
+  .dominance-bar .status-bar-progress-fill { background: linear-gradient(to right, #d66a6a, #f78c8c); }
+  .status-bar-npc-speech {
+    color: #d8d8ff;
+    background-color: rgba(0,0,0,0.15);
+    padding: 8px 12px;
+    border-radius: 4px;
+    margin: 8px 0;
+    white-space: pre-wrap;
+    border-left: 3px solid #87bbfd;
+  }
+  .status-bar-npc-monologue {
+    font-size: 0.9em;
+    color: #a0a0b8;
+    padding: 5px 10px;
+    background-color: rgba(20,20,30,0.1);
+    border-left: 3px solid #606080;
+    margin: 8px 0;
+    white-space: pre-wrap;
+  }
+  .status-bar-player-options button {
+    background-color: #505070;
+    color: #e0e0ff;
+    border: 1px solid #686888;
+    padding: 9px 14px;
+    margin: 6px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-family: inherit;
+    transition: background-color 0.2s ease, color 0.2s ease;
+  }
+  .status-bar-player-options button:hover {
+    background-color: #686888;
+    color: #ffffff;
+  }
+</style>
+<div class="status-bar-container-pro">
+  <details>
+    <summary>世界信息</summary>
+    <div class="status-bar-content-pro">
+      <p><strong>日期:</strong> $1</p>
+      <p><strong>时间:</strong> $2</p>
+      <p><strong>天气:</strong> $3</p>
+      <p><strong>全局事件:</strong> $4</p>
+    </div>
+  </details>
+  <details open>
+    <summary>$5</summary>
+    <div class="status-bar-content-pro">
+      <details open>
+        <summary>核心信息与装备</summary>
+        <div class="status-bar-content-pro">
+          <p><strong>等级:</strong> $6 (EXP: $7 / $8)</p>
+          <div class="status-bar-progress-container hp-bar">
+            <div class="status-bar-progress-label"><span>HP</span><span>$9 / $10</span></div>
+            <div class="status-bar-progress-bar"><div class="status-bar-progress-fill" style="width: calc($9 / $10 * 100%);"></div></div>
+          </div>
+          <div class="status-bar-progress-container mp-bar">
+            <div class="status-bar-progress-label"><span>MP</span><span>$11 / $12</span></div>
+            <div class="status-bar-progress-bar"><div class="status-bar-progress-fill" style="width: calc($11 / $12 * 100%);"></div></div>
+          </div>
+          <p><strong>当前位置:</strong> $13</p>
+          <p><strong>货币:</strong> $14 索里达</p>
+          <p><strong>武器:</strong> $15</p>
+          <p><strong>防具:</strong> $16</p>
+          <p><strong>饰品:</strong> $17</p>
+        </div>
+      </details>
+      <details>
+        <summary>特殊状态</summary>
+        <div class="status-bar-content-pro">
+          <div class="status-bar-progress-container dominance-bar">
+            <div class="status-bar-progress-label"><span>恶堕度</span><span>$18%</span></div>
+            <div class="status-bar-progress-bar"><div class="status-bar-progress-fill" style="width: $18%;"></div></div>
+          </div>
+          <p><strong>累计损失等级:</strong> $19</p>
+          <p><strong>上次榨取者:</strong> $20</p>
+          <p><strong>当前状况:</strong> $21</p>
+        </div>
+      </details>
+      <details>
+        <summary>物品栏</summary>
+        <div class="status-bar-content-pro">
+          <p class="status-bar-item-indent">$22</p>
+        </div>
+      </details>
+    </div>
+  </details>
+  <details open>
+    <summary>互动NPC: $23</summary>
+    <div class="status-bar-content-pro">
+      <p><strong>核心状态:</strong> $24</p>
+      <div class="status-bar-npc-speech">$25</div>
+      <div class="status-bar-npc-monologue">$26</div>
+      <details>
+        <summary>外貌细节</summary>
+        <div class="status-bar-content-pro">
+          <p><strong>上半身:</strong> $27</p>
+          <p><strong>下半身:</strong> $28</p>
+          <p><strong>双足:</strong> $29</p>
+          <p><strong>胸部:</strong> $30</p>
+          <p><strong>私密:</strong> $31</p>
+        </div>
+      </details>
+      <p><strong>关键物品:</strong> $32</p>
+    </div>
+  </details>
+  <details>
+    <summary>其他角色</summary>
+    <div class="status-bar-content-pro">
+      <p>$33</p>
+    </div>
+  </details>
+  <details open>
+    <summary>玩家选项</summary>
+    <div class="status-bar-content-pro status-bar-player-options">
+      <button class="action-button">$34</button>
+      <button class="action-button">$35</button>
+    </div>
+  </details>
+</div>
+  ```
+</范例2>
+
+<范例3>
+  ```
+  内容格式: 
+<content>
+<main> ({{user}} 第一人称视角内容) </main>
+<charone> (光第一人称视角内容) </charone>
+<chartwo> (夏帆第一人称视角内容) </chartwo>
+<charthree> (镜花第一人称视角内容) </charthree>
+<charfour> (堇第一人称视角内容) </charfour>
+</content>
+<StatusBlock>
+日期：(月-日-周X-时-分)-(天气)
+当前区域:(当前地点)
+
+相良光压力值:XX-相良光好感度:XX-下一步计划:XX
+
+月岛夏帆压力值:XX-月岛夏帆好感度:XX-下一步计划:XX
+
+黑泽镜花压力值:XX-黑泽镜花好感度:XX-下一步计划:XX
+
+黑泽堇压力值:XX-黑泽堇好感度:XX-下一步计划:XX
+</StatusBlock>
+  ```
+  ```
+  查找正则表达式:
+    <content>\s*<main>([\s\S]*?)</main>\s*<charone>([\s\S]*?)</charone>\s*<chartwo>([\s\S]*?)</chartwo>\s*<charthree>([\s\S]*?)</charthree>\s*<charfour>([\s\S]*?)</charfour>\s*</content>\s*<StatusBlock>([\s\S]*?)</StatusBlock>
+  ```
+  ```
+ HTML美化替换: 
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Multi-Perspective View & Status</title>
+<style>
+    /* === Base Styles (Youthful School Theme) === */
+    body {
+        font-family: 'Helvetica Neue', Arial, "Hiragino Kaku Gothic ProN", "Hiragino Sans", Meiryo, sans-serif;
+        line-height: 1.7;
+        margin: 0;
+        background-color: #f0f8ff; /* Light Alice Blue */
+        color: #334;
+    }
+
+    /* === Consistent Container Styling === */
+    .multi-perspective-container,
+    .status-block-container {
+        max-width: 750px; /* Shared max-width */
+        margin: 25px auto; /* Shared margin for centering and spacing */
+        background-color: #ffffff; /* Shared background */
+        border: 1px solid #cce0ff; /* Shared border */
+        border-radius: 10px; /* Shared rounding */
+        box-shadow: 0 3px 6px rgba(0, 50, 100, 0.1); /* Shared shadow */
+        overflow: hidden; /* Contain children */
+    }
+    /* Adjust margin specifically for status block if needed */
+    .status-block-container {
+        margin-top: 20px; /* Slightly less top margin than the first container */
+        margin-bottom: 20px;
+    }
+
+
+    /* === Main Perspective Area === */
+    .main-perspective {
+        padding: 30px 25px;
+        border-bottom: 1px dashed #ddeeff; /* Dashed line */
+    }
+
+    /* --- Shared Text Formatting --- */
+    .perspective-text {
+        color: #445566;
+        white-space: pre-wrap; /* Preserve whitespace/newlines */
+        overflow-wrap: break-word;
+        word-wrap: break-word;
+        font-size: 0.95em;
+        line-height: 1.75;
+    }
+
+    /* === Tabbed Secondary Perspectives Area === */
+    .tabbed-perspectives {
+        background-color: #e6f2ff; /* Lighter blue background */
+        border-top: 1px solid #cce0ff;
+        padding-top: 15px; /* Space above tabs */
+    }
+
+    .tabbed-perspectives h3 {
+        text-align: center;
+        margin-top: 0;
+        margin-bottom: 10px;
+        color: #0056b3; /* Clear blue title */
+        font-size: 1.1em;
+        font-weight: 600;
+        padding: 0 20px; /* Add padding if needed */
+    }
+
+    /* --- Tab Navigation --- */
+    .perspective-tabs {
+        display: flex;
+        justify-content: center; /* Center tabs */
+        gap: 5px; /* Small gap between tabs */
+        padding: 0 15px 10px 15px; /* Padding around tabs, bottom padding acts as space */
+        border-bottom: 1px solid #cce0ff; /* Line below tabs */
+        flex-wrap: wrap; /* Allow tabs to wrap on small screens */
+    }
+
+    .perspective-tabs button {
+        padding: 6px 15px;
+        font-size: 0.8em;
+        font-weight: 600;
+        cursor: pointer;
+        border: 1px solid transparent; /* Make border transparent initially */
+        border-bottom: 3px solid transparent; /* Space for active indicator */
+        background-color: transparent; /* No background initially */
+        color: #0056b3; /* Blue text */
+        border-radius: 5px 5px 0 0; /* Slightly rounded top corners */
+        transition: all 0.25s ease-out;
+        opacity: 0.7; /* Non-active tabs slightly faded */
+    }
+
+    .perspective-tabs button:hover {
+        background-color: rgba(255, 255, 255, 0.5); /* Light hover */
+        opacity: 1;
+    }
+
+    .perspective-tabs button.active {
+        color: #003d80; /* Darker blue */
+        border-color: #cce0ff; /* Top/side border */
+        border-bottom-color: #0056b3; /* Active indicator line */
+        background-color: #ffffff; /* Match panel background */
+        opacity: 1; /* Fully opaque */
+        box-shadow: 0 -2px 4px rgba(0, 50, 100, 0.05); /* Subtle shadow */
+    }
+
+    /* --- Content Panels Container --- */
+    .perspective-panels {
+        display: flex;
+        overflow-x: auto;
+        scroll-snap-type: x mandatory; /* Snap panels into view */
+        scroll-behavior: smooth; /* Smooth scroll via JS */
+        height: 300px; /* Adjust this fixed height as needed */
+        background-color: #ffffff; /* White background for content area */
+        -ms-overflow-style: none;  /* IE and Edge */
+        scrollbar-width: none;  /* Firefox */
+    }
+    .perspective-panels::-webkit-scrollbar { display: none; }
+
+
+    /* --- Individual Content Panel --- */
+    .perspective-panel {
+        flex: 0 0 100%; /* Take full width, don't shrink */
+        width: 100%;
+        scroll-snap-align: start; /* Snap alignment */
+        overflow-y: auto; /* Vertical Scrolling within Panel */
+        height: 100%; /* Fill the fixed height of the container */
+        padding: 20px 25px; /* Inner padding for text */
+        box-sizing: border-box; /* Include padding in width/height */
+    }
+
+    .perspective-panel .perspective-text { min-height: 50px; }
+
+    /* === Status Block Styles (Youthful School Theme) === */
+
+    .status-block-content {
+        padding: 20px 25px; /* Consistent padding */
+        line-height: 1.7; /* Consistent line height */
+        color: #445566; /* Standard text color */
+        white-space: pre-wrap; /* !!! CRITICAL: Preserve whitespace/newlines in $1 !!! */
+        overflow-wrap: break-word; /* Allow long words to wrap */
+        word-wrap: break-word;     /* Legacy word wrap */
+    }
+
+    /* Styling for Header/Location Info (Assumes these classes are in $1) */
+    .status-header,
+    .status-location {
+        font-size: 0.9em;
+        color: #0056b3; /* Theme blue */
+        padding-bottom: 5px;
+        margin-bottom: 10px;
+        border-bottom: 1px dashed #ddeeff; /* Dashed separator */
+    }
+    .status-header strong,
+    .status-location strong {
+        font-weight: 600;
+        color: #004a99; /* Slightly darker blue for label */
+        margin-right: 5px;
+     }
+
+
+    /* Styling for each character's status block (Assumes this class is in $1) */
+    .status-character {
+        margin-top: 15px;
+        padding-top: 15px;
+        border-top: 1px solid #e6f2ff; /* Light blue separator */
+    }
+    .status-character:first-of-type {
+        margin-top: 0; /* No top margin for the first character block */
+        padding-top: 0;
+        border-top: none; /* No top border for the first character block */
+    }
+
+
+    /* Styling for character names (Assumes this class is in $1) */
+    .status-character-name {
+        font-weight: 600; /* Bold */
+        color: #007bff; /* Brighter blue highlight */
+        display: block; /* Ensure it takes its own line or space */
+        margin-bottom: 8px;
+        font-size: 1em; /* Normal size for name */
+    }
+
+    /* Styling for individual stat lines (targets <p> tags within .status-character in $1) */
+    .status-character p {
+        margin-top: 0; /* Reset default top margin */
+        margin-bottom: 5px; /* Space between stat lines */
+        font-size: 0.9em; /* Slightly smaller font for stats */
+        color: #556677; /* Slightly lighter text for stats */
+    }
+    .status-character p strong {
+        /* Style for labels like "压力值:" if wrapped in <strong> */
+        color: #334455; /* Darker label color */
+        margin-right: 5px; /* Space after label */
+        font-weight: 600; /* Ensure label is bold */
+    }
+
+    /* Remove default paragraph margin for the last line */
+    .status-character p:last-child {
+        margin-bottom: 0;
+    }
+
+    /* === Responsive adjustments === */
+    @media (max-width: 768px) {
+        .multi-perspective-container,
+        .status-block-container {
+            /* Reduce horizontal margin on smaller screens, auto still centers */
+            margin-left: 10px;
+            margin-right: 10px;
+            /* max-width is still in effect */
+        }
+        .main-perspective,
+        .perspective-panel,
+        .status-block-content {
+            /* Reduce padding slightly on smaller screens */
+            padding: 20px 15px;
+        }
+        .tabbed-perspectives h3,
+        .perspective-tabs {
+             padding-left: 10px;
+             padding-right: 10px;
+        }
+    }
+     @media (max-width: 480px) {
+         /* Further adjustments for very small screens if needed */
+         .perspective-tabs button {
+             padding: 5px 10px;
+             font-size: 0.75em;
+         }
+         .main-perspective,
+         .perspective-panel,
+         .status-block-content {
+            padding: 15px 10px;
+         }
+         .perspective-panels {
+             height: 250px; /* Maybe reduce height on small phones */
+         }
+     }
+</style>
+</head>
+<body>
+
+<!-- === Multi-Perspective Section === -->
+<div class="multi-perspective-container">
+    <!-- Main Perspective Area -->
+    <div class="main-perspective">
+        <div class="perspective-text" id="main-content">
+         $1
+        </div>
+    </div>
+
+    <!-- Tabbed Secondary Perspectives Area -->
+    <div class="tabbed-perspectives">
+        <h3>她の視点</h3>
+        <div class="perspective-tabs" role="tablist">
+            <button role="tab" aria-selected="true" aria-controls="panel-charone" data-tab-target="#panel-charone" class="active">光</button>
+            <button role="tab" aria-selected="false" aria-controls="panel-chartwo" data-tab-target="#panel-chartwo">夏帆</button>
+            <button role="tab" aria-selected="false" aria-controls="panel-charthree" data-tab-target="#panel-charthree">镜花</button>
+            <button role="tab" aria-selected="false" aria-controls="panel-charfour" data-tab-target="#panel-charfour">堇</button>
+        </div>
+        <div class="perspective-panels">
+            <div id="panel-charone" role="tabpanel" class="perspective-panel active">
+                <div class="perspective-text">
+                $2
+                </div>
+            </div>
+            <div id="panel-chartwo" role="tabpanel" class="perspective-panel">
+                <div class="perspective-text">
+ $3
+                </div>
+            </div>
+            <div id="panel-charthree" role="tabpanel" class="perspective-panel">
+                <div class="perspective-text">
+$4
+                </div>
+            </div>
+            <div id="panel-charfour" role="tabpanel" class="perspective-panel">
+                <div class="perspective-text">
+$5
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- === Status Block Section === -->
+<div class="status-block-container">
+  <div class="status-block-content">
+    $6
+  </div>
+</div>
+
+<!-- Tab Logic Script -->
+<script>
+    // Ensure script runs after DOM is loaded
+    document.addEventListener('DOMContentLoaded', () => {
+        const multiPerspectiveContainer = document.querySelector('.multi-perspective-container'); // Check if the perspective section exists
+
+        // Only run tab logic if the perspective container is present
+        if (multiPerspectiveContainer) {
+            const tabsContainer = multiPerspectiveContainer.querySelector('.perspective-tabs');
+            const panelsContainer = multiPerspectiveContainer.querySelector('.perspective-panels');
+
+            // Check if tabs and panels exist within the container
+            if (tabsContainer && panelsContainer) {
+                const tabs = tabsContainer.querySelectorAll('button[role="tab"]');
+                const panels = panelsContainer.querySelectorAll('.perspective-panel');
+
+                if (tabs.length > 0 && panels.length > 0) { // Ensure tabs/panels were found
+
+                    // Function to switch tabs
+                    function switchTab(targetTab) {
+                        if (!targetTab) return; // Exit if targetTab is null
+
+                        const targetPanelId = targetTab.getAttribute('aria-controls');
+                        const targetPanel = panelsContainer.querySelector(`#${targetPanelId}`);
+
+                        // Deactivate all tabs
+                        tabs.forEach(t => {
+                            t.classList.remove('active');
+                            t.setAttribute('aria-selected', 'false');
+                        });
+
+                        // Activate the target tab
+                        targetTab.classList.add('active');
+                        targetTab.setAttribute('aria-selected', 'true');
+
+                        // Scroll the panels container to the target panel
+                        if (targetPanel) {
+                            const scrollLeft = targetPanel.offsetLeft;
+                            // Check if scrollLeft is a valid number before scrolling
+                            if (typeof scrollLeft === 'number') {
+                                panelsContainer.scrollTo({
+                                    left: scrollLeft,
+                                    behavior: 'smooth'
+                                });
+                            }
+                        }
+                    }
+
+                    // Add click listener to tabs container
+                    tabsContainer.addEventListener('click', (e) => {
+                        if (e.target.matches('button[role="tab"]')) {
+                            switchTab(e.target);
+                        }
+                    });
+
+                    // Optional: Update tabs when user scrolls/swipes the panels
+                    let scrollTimeout;
+                    panelsContainer.addEventListener('scroll', () => {
+                        clearTimeout(scrollTimeout);
+                        scrollTimeout = setTimeout(() => {
+                            const containerWidth = panelsContainer.offsetWidth;
+                            if (containerWidth > 0) { // Avoid division by zero
+                                const scrollLeft = panelsContainer.scrollLeft;
+                                const activeIndex = Math.round(scrollLeft / containerWidth);
+
+                                if (activeIndex >= 0 && activeIndex < tabs.length) {
+                                    tabs.forEach((t, index) => {
+                                        if (index === activeIndex) {
+                                            if (!t.classList.contains('active')) {
+                                                t.classList.add('active');
+                                                t.setAttribute('aria-selected', 'true');
+                                            }
+                                        } else {
+                                            if (t.classList.contains('active')) {
+                                                t.classList.remove('active');
+                                                t.setAttribute('aria-selected', 'false');
+                                            }
+                                        }
+                                    });
+                                }
+                            }
+                        }, 150);
+                    });
+
+                    // Initial state check (optional if first tab always has 'active' class in HTML)
+                    // if (tabs.length > 0) {
+                    //     switchTab(tabs[0]);
+                    // }
+                }
+            }
+        }
+    }); // End DOMContentLoaded
+</script>
+
+</body>
+</html>
+```
+  ```
+</范例3>
+
+<范例4>
+  ```
+  内容格式: 
+        <chat>
+        <states>
+        星辞好感度: 15
+        当前资金: 500
+        当前天数: 1
+        </states>
+        <message>
+        CG|相遇
+        是你……|星辞|星辞正常
+        你真的找到这里来了。|星辞|星辞正常
+        少女的表情有些复杂,既有惊讶,也有一丝不易察觉的释然。|旁白
+        背景|下城区
+        好了,这里人多眼杂,不是说话的地方。|星辞|星辞正常
+        </message>
+        </chat>
+  ```
+  ```
+  查找正则表达式: 
+    <chat>([\s\S]*?)<\/chat>
+  ```
+  ```
+ HTML美化替换: 
+```
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>赛博朋克GAL界面</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&display=swap');
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            width: 100%;
+            height: auto;
+            min-height: 100vh;
+            background: 
+                linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.6)),
+                url('https://files.catbox.moe/bfd1yo.png');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            font-family: 'Orbitron', 'Microsoft YaHei', monospace;
+            overflow: hidden;
+            color: #00ffff;
+            transition: background-image 0.5s ease-in-out;
+        }
+
+        .game-container {
+            width: 100%;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            border: 2px solid #00ffff;
+            box-shadow: 
+                0 0 20px rgba(0, 255, 255, 0.5),
+                inset 0 0 20px rgba(0, 255, 255, 0.1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .status-bar {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            z-index: 10;
+            background: rgba(0, 20, 40, 0.8);
+            border: 1px solid #00ffff;
+            padding: 10px 15px;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0, 255, 255, 0.3);
+            color: #00ffff;
+            font-size: 16px;
+            text-shadow: 0 0 5px rgba(0, 255, 255, 0.5);
+            transition: opacity 0.5s ease-in-out;
+            text-align: right;
+        }
+
+        .status-bar .status-item {
+            margin-bottom: 5px;
+        }
+
+        .status-bar .status-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .image-section {
+            flex-grow: 1;
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border-bottom: none;
+            box-shadow: none;
+            transition: background 0.5s ease;
+        }
+
+        .character-image {
+            transition: all 0.3s ease;
+            filter: brightness(1.1) contrast(1.2);
+            opacity: 1;
+            transition: opacity 0.5s ease-in-out;
+            position: absolute;
+            z-index: 1;
+            bottom: 0;
+            left: 2%;
+            height: 55vh;
+            width: auto;
+        }
+
+        .placeholder-image {
+            width: 400px;
+            height: 500px;
+            background: 
+                linear-gradient(135deg, 
+                    #00ffff 0%, 
+                    #ff00ff 50%, 
+                    #00ffff 100%);
+            border-radius: 15px;
+            border: 2px solid #00ffff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: #000;
+            font-size: 24px;
+            font-weight: 900;
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.8);
+            box-shadow: 
+                0 0 30px rgba(0, 255, 255, 0.8),
+                0 0 60px rgba(255, 0, 255, 0.4),
+                inset 0 0 20px rgba(255, 255, 255, 0.2);
+            animation: hologram 3s ease-in-out infinite alternate;
+            opacity: 1;
+            transition: opacity 0.5s ease-in-out;
+        }
+        
+        .hidden {
+            opacity: 0 !important;
+            pointer-events: none;
+        }
+
+        @keyframes hologram {
+            0% {
+                box-shadow: 
+                    0 0 30px rgba(0, 255, 255, 0.8),
+                    0 0 60px rgba(255, 0, 255, 0.4),
+                    inset 0 0 20px rgba(255, 255, 255, 0.2);
+            }
+            100% {
+                box-shadow: 
+                    0 0 40px rgba(0, 255, 255, 1),
+                    0 0 80px rgba(255, 0, 255, 0.6),
+                    inset 0 0 30px rgba(255, 255, 255, 0.3);
+            }
+        }
+
+        .text-section {
+            width: 100%;
+            min-height: 33.33vh;
+            background: 
+                linear-gradient(180deg, 
+                    rgba(0, 0, 0, 0.85) 0%,
+                    rgba(0, 20, 40, 0.9) 100%);
+            position: relative;
+            z-index: 2;
+            display: flex;
+            flex-direction: column;
+            padding: 20px;
+            border-top: 2px solid #00ffff;
+            box-shadow: 
+                0 -5px 15px rgba(0, 255, 255, 0.3),
+                inset 0 0 20px rgba(0, 255, 255, 0.1);
+        }
+
+        .speaker-name {
+            color: #ff00ff;
+            font-size: 22px;
+            font-weight: 900;
+            margin-bottom: 15px;
+            text-shadow: 
+                0 0 10px rgba(255, 0, 255, 0.8),
+                0 0 20px rgba(255, 0, 255, 0.4);
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            border-left: 4px solid #ff00ff;
+            padding-left: 15px;
+            animation: glow 2s ease-in-out infinite alternate;
+            transition: all 0.3s ease;
+        }
+
+        .speaker-name.narrator {
+            color: #aaa;
+            border-left-color: #aaa;
+            animation: none;
+            text-shadow: 0 0 5px rgba(170, 170, 170, 0.5);
+        }
+
+        @keyframes glow {
+            from {
+                text-shadow: 
+                    0 0 10px rgba(255, 0, 255, 0.8),
+                    0 0 20px rgba(255, 0, 255, 0.4);
+            }
+            to {
+                text-shadow: 
+                    0 0 15px rgba(255, 0, 255, 1),
+                    0 0 30px rgba(255, 0, 255, 0.6);
+            }
+        }
+
+        .dialogue-text {
+            flex: 1;
+            color: #00ffff;
+            font-size: 18px;
+            line-height: 1.8;
+            padding: 20px;
+            background: 
+                linear-gradient(135deg, 
+                    rgba(0, 255, 255, 0.1) 0%, 
+                    rgba(0, 0, 0, 0.8) 100%);
+            border-radius: 10px;
+            border: 2px solid #00ffff;
+            backdrop-filter: blur(10px);
+            overflow-y: auto;
+            scrollbar-width: thin;
+            scrollbar-color: #00ffff rgba(0, 0, 0, 0.3);
+            height: auto;
+            min-height: 120px;
+            box-shadow: 
+                0 0 15px rgba(0, 255, 255, 0.5),
+                inset 0 0 15px rgba(0, 255, 255, 0.1);
+            text-shadow: 0 0 5px rgba(0, 255, 255, 0.3);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .dialogue-text:hover {
+            box-shadow: 
+                0 0 20px rgba(0, 255, 255, 0.7),
+                inset 0 0 20px rgba(0, 255, 255, 0.15);
+            transform: scale(1.01);
+        }
+
+        .continue-indicator {
+            position: relative;
+            text-align: right;
+            margin-top: 15px;
+            color: #ff00ff;
+            font-size: 18px;
+            font-weight: 700;
+            animation: cyberpunk-blink 1.5s infinite;
+            text-shadow: 
+                0 0 10px rgba(255, 0, 255, 0.8),
+                0 0 20px rgba(255, 0, 255, 0.4);
+        }
+
+        @keyframes cyberpunk-blink {
+            0%, 50% { 
+                opacity: 1; 
+                text-shadow: 
+                    0 0 10px rgba(255, 0, 255, 0.8),
+                    0 0 20px rgba(255, 0, 255, 0.4);
+            }
+            51%, 100% { 
+                opacity: 0.3;
+                text-shadow: 
+                    0 0 5px rgba(255, 0, 255, 0.4),
+                    0 0 10px rgba(255, 0, 255, 0.2);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <div id="statusBar" class="status-bar"></div>
+        <img id="characterImage" src="" alt="角色图片" class="character-image hidden">
+
+        <div class="image-section">
+    </div>
+
+        <div class="text-section">
+            <div class="speaker-name" id="speakerName"></div>
+            <div class="dialogue-text" id="dialogueText" onclick="nextLine()"></div>
+            <div class="continue-indicator" id="continueIndicator">>>> CLICK TO CONTINUE</div>
+        </div>
+    </div>
+
+    <script>
+        // --- 数据库 ---
+        const imageDatabase = {
+            characters: {
+                '星辞生气': { url: 'https://files.catbox.moe/jz35c0.png', name: '星辞', emotion: '生气' },
+                '星辞害羞': { url: 'https://files.catbox.moe/7s636g.png', name: '星辞', emotion: '害羞' },
+                '星辞正常': { url: 'https://files.catbox.moe/jo937u.png', name: '星辞', emotion: '正常' },
+                'XC-132正常': { url: 'https://files.catbox.moe/6lbk7g.png', name: 'XC-132', emotion: '正常' }
+            },
+            backgrounds: {
+                '下城区': { url: 'https://files.catbox.moe/bfd1yo.png', name: '下城区' },
+                '中城区': { url: 'https://files.catbox.moe/4t8ts1.png', name: '中城区' },
+                '上城区': { url: 'https://files.catbox.moe/xxwloh.png', name: '上城区' },
+                '夜巷激战': { url: 'https://files.catbox.moe/2kfi8z.png', name: '夜巷激战' },
+                '相遇': { url: 'https://files.catbox.moe/cz1pf0.png', name: '相遇' },
+                '命名之时': { url: 'https://files.catbox.moe/zt9oec.png', name: '命名之时' },
+                '再会': { url: 'https://files.catbox.moe/vh6nby.png', name: '再会' },
+                '天降神兵': { url: 'https://files.catbox.moe/82iium.png', name: '天降神兵' },
+                '天空的钥匙': { url: 'https://files.catbox.moe/o78xd7.png', name: '天空的钥匙' },
+                '最后的诺言': { url: 'https://files.catbox.moe/4ohkkj.png', name: '最后的诺言' },
+                '揭示': { url: 'https://files.catbox.moe/r4ejre.png', name: '揭示' },
+                '红光': { url: 'https://files.catbox.moe/yr149j.png', name: '红光' },
+                '谎言': { url: 'https://files.catbox.moe/z10qcq.png', name: '谎言' },
+                '交界线': { url: 'https://files.catbox.moe/v6z3r3.png', name: '交界线' },
+                '焚城': { url: 'https://files.catbox.moe/l67uv2.png', name: '焚城' }
+            }
+        };
+
+        // --- 游戏数据 ---
+        const gameData = `
+$1
+</message>
+</chat>
+`;
+
+        // --- DOM元素 ---
+        const characterImage = document.getElementById('characterImage');
+        const speakerName = document.getElementById('speakerName');
+        const dialogueText = document.getElementById('dialogueText');
+        const continueIndicator = document.getElementById('continueIndicator');
+        const statusBar = document.getElementById('statusBar');
+
+        // --- 脚本系统变量 ---
+        let scriptLines = [];
+        let currentLineIndex = -1;
+        let isTyping = false;
+        let isCgActive = false;
+        let gameStates = {};
+
+        // --- 脚本解析正则表达式 ---
+        const scriptRegex = {
+            background: /^(背景|CG)\|(.+)$/,
+            dialogue: /^(.+?)\|(.+?)\|(.+)$/,
+            narrator: /^(.+?)\|旁白$/
+        };
+
+        // --- 核心功能 ---
+        function nextLine() {
+            if (isTyping) {
+                // 如果正在打字,立即显示完整文本
+                isTyping = false;
+                return;
+            }
+
+            if (currentLineIndex >= scriptLines.length - 1) {
+                // 到达最后一行,隐藏继续提示,但保留最后的对话内容
+                continueIndicator.style.display = 'none';
+                return;
+            }
+
+            currentLineIndex++;
+            executeLine(scriptLines[currentLineIndex]);
+        }
+
+        function executeLine(line) {
+            console.log('执行:', line);
+            
+            // 优先匹配背景指令
+            const backgroundMatch = line.match(scriptRegex.background);
+            if (backgroundMatch) {
+                handleBackgroundCommand(backgroundMatch);
+                // 背景或CG指令后,自动处理下一行
+                nextLine();
+                return;
+            }
+
+            // 匹配旁白
+            const narratorMatch = line.match(scriptRegex.narrator);
+            if (narratorMatch) {
+                handleNarratorCommand(narratorMatch);
+                return;
+            }
+
+            // 匹配对话
+            const dialogueMatch = line.match(scriptRegex.dialogue);
+            if (dialogueMatch) {
+                handleDialogueCommand(dialogueMatch);
+                return;
+            }
+
+            // 无法解析的行（包括占位符）,警告并自动跳到下一行
+            console.warn('无法解析的脚本行:', line);
+            nextLine();
+        }
+        
+        function typeWriter(element, text, onComplete) {
+            isTyping = true;
+            let i = 0;
+            element.innerHTML = '';
+            
+            function type() {
+                if (!isTyping) { // 如果中途停止打字
+                    element.innerHTML = text;
+                    if(onComplete) onComplete();
+                    return;
+                }
+                
+                if (i < text.length) {
+                    element.innerHTML += text.charAt(i);
+                    i++;
+                    setTimeout(type, 50); // 打字速度
+                } else {
+                    isTyping = false;
+                    if(onComplete) onComplete();
+                }
+            }
+            type();
+        }
+
+        // --- 指令处理器 ---
+        function handleBackgroundCommand(match) {
+            const [, type, content] = match;
+            const bgKey = Object.keys(imageDatabase.backgrounds).find(k => k === content.trim());
+            if (bgKey) {
+                const data = imageDatabase.backgrounds[bgKey];
+                if (type.toUpperCase() === 'CG') {
+                    isCgActive = true;
+                    document.body.style.backgroundImage = `url('${data.url}')`;
+                    hideCharacter();
+                    statusBar.classList.add('hidden');
+                } else {
+                    isCgActive = false;
+                    document.body.style.backgroundImage = `linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.6)), url('${data.url}')`;
+                    statusBar.classList.remove('hidden');
+                }
+            }
+        }
+
+        function handleDialogueCommand(match) {
+            const [, dialogue, speaker, imageKeyword] = match;
+            speakerName.textContent = speaker.toUpperCase();
+            speakerName.classList.remove('narrator');
+
+            if (isCgActive) {
+                hideCharacter();
+            } else {
+                const charKey = Object.keys(imageDatabase.characters).find(k => k === imageKeyword.trim());
+                if (charKey) {
+                    showCharacter(imageDatabase.characters[charKey]);
+                } else {
+                    // 对话中如果没有指定图片,则保持当前立绘状态,不隐藏
+                    // hideCharacter(); 
+                }
+            }
+            
+            typeWriter(dialogueText, dialogue);
+        }
+
+        function handleNarratorCommand(match) {
+            const [, text] = match;
+            speakerName.textContent = '旁白';
+            speakerName.classList.add('narrator');
+            
+            if (isCgActive) {
+                hideCharacter();
+            }
+            // 旁白时不改变立绘状态
+            typeWriter(dialogueText, text);
+        }
+
+        // --- 视图更新 ---
+        function showCharacter(data) {
+            if (characterImage.src !== data.url) {
+                characterImage.src = data.url;
+            }
+            characterImage.classList.remove('hidden');
+        }
+
+        function hideCharacter() {
+            characterImage.classList.add('hidden');
+        }
+
+        // --- 初始化 ---
+        document.addEventListener('DOMContentLoaded', function() {
+            // 解析游戏数据
+            const statesMatch = gameData.match(/<states>([\s\S]*?)<\/states>/);
+            const messageMatch = gameData.match(/<message>([\s\S]*?)<\/message>/);
+
+            if (statesMatch && statesMatch[1]) {
+                const statesRaw = statesMatch[1].trim();
+                statesRaw.split('\n').forEach(line => {
+                    const parts = line.split(':');
+                    if (parts.length === 2) {
+                        gameStates[parts[0].trim()] = parts[1].trim();
+                    }
+                });
+                updateStatusBar();
+            }
+
+            const storyScript = (messageMatch && messageMatch[1]) ? messageMatch[1].trim() : '';
+
+            // 解析脚本
+            scriptLines = storyScript.split('\n').map(line => line.trim()).filter(line => line.length > 0);
+            
+            if (scriptLines.length > 0) {
+                // 自动开始,直接跳过第一部分
+                setTimeout(() => {
+                    nextLine();
+                }, 100); // 稍微延迟以确保页面完全加载
+            } else {
+                dialogueText.innerHTML = '错误：未加载任何脚本内容。';
+            }
+            
+            // 键盘事件监听
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'ArrowRight' || e.key === ' ') {
+                    e.preventDefault();
+                    nextLine();
+                }
+            });
+        });
+
+        function updateStatusBar() {
+            if (!statusBar) return;
+            let html = '';
+            for (const key in gameStates) {
+                if (key !== '星辞好感度') {
+                    html += `<div class="status-item">${key}: ${gameStates[key]}</div>`;
+                }
+            }
+            statusBar.innerHTML = html;
+        }
+
+        characterImage.addEventListener('error', function() {
+            console.error('角色图片加载失败:', this.src);
+            hideCharacter();
+        });
+    </script>
+</body>
+</html>
+```
+  ```
+</范例4>
+
+
+<HTML panels>
+### HTML Guidelines:
+In your reply, start making dynamic HTML panels in content, designed to visually depict information from chat in an immersive way (e.g. display consoles, phone screens, websites, signs, scanners, table lists, indicators, character images, scene images, attack FX, etc.).
+You should have a complete aesthetic representation or simulation of the world in your roleplay through these panels. Every aspect, color, style, etc. should be tailored to the theme of the scene, but you should always strive to make them impactful to the story and its characters. Go very detailed, you can even use medical/legal to provide as much depth as possible.
+HTML panel content must be displayed in Chinese. Width is automatically maximized. Add line breaks "<br>" to the content
+
+Follow this XML/HTML tag template, avoid quotes and use apostrophes in the tag structure:
+<[html tag] style='[style]:[variable];[style]:[variable]'><[html tag] style='[style]:[variable];[style]:[variable]'></[html tag]></[html tag]>
+
+### HTML Panel Rules
+Always include all 8 (eight) elements in your next reply:
+1. Structure:
+• Use <div> tags to display the panel with dialogue. Insert scene images.
+• Nest <div> and <blockquote> tags to enhance the structure, max width.
+• Use <hr> to separate elements.
+• Use "width: automatic" code
+• Always weave HTML panels between text paragraph, max width.
+2. Style:
+• Use style attributes (background color, border, box-shadow, border-radius, text-shadow) and gradients creatively.
+• Make panels auto-maximize width or float to increase spacing. Wrap panel text below graph. Center theme.
+• Use dark backgrounds and contrasting text by default (white by default).
+• Use a variety of colors that blend well with background and element style colors.
+• Follow color themes and prioritize readability based on context. Remember that text is white by default, so make sure elements are visible by changing backgrounds to dark and vice versa.
+• Use rem/em units for scalability.
+• Use sarcastic internet prose and be influenced by imageboards, 4chan, meme culture. Don’t force memes.
+• Use kaomojis, alt codes, CSS to convert Markdown to nested <div>.
+3. Layout:
+• Place panels as directed for emphasis or spontaneous placement.
+• Set overall size/width of background <div> panel to max-width. Get creative and leverage other formats (rectangle, square, etc.)
+• Use CSS Grid, Flexbox (with flex-wrap, align-content), and width % for alignment.
+• Use media queries for responsiveness.
+• Keep similar elements in consistent styles.
+4. Content:
+• Use <a>, <b>, <u>, <i>, <sub>, <sup>, <small> for text styling. Avoid using Markdown in tags.
+• For data, use tables (5+ rows, 2-3 columns) and lists.
+• Use <meter> and <progress> bars, with values ​​and widths automatically adjusting within a <div> background.
+• Use apostrophes, not quotes: <meter value='50' min='0' max='100'></meter>
+• Incorporate relevant icons, symbols, glyphs (⚠, ☑, ✴, etc.) to enhance context.
+• Include icons from “https://image.pollinations.ai/prompt/{icon}”
+6. Interactivity:
+• Add hover effects, clickable elements, inline CSS animations.
+• Ensure accessibility and clear visibility of theme text.
+7. Optimization:
+• Automatic maximum width for all panels. Panel image and text content are arranged up and down, and the alignment is beautiful. The theme is centered. Insert character images, icons, scene images based on current description
+• Use specific CSS selectors for fine control.
+• Choose theme-specific web fonts for immersion.
+
+### Immersive HTML Panel Creation:
+1. Learn world style:
+•Determine the basic style of the panel based on worldview, such as If it is the ancient world, use the ancient style; if it is the modern world, use the modern style, and so on.
+2. Strategic Placement:
+• Introduce new characters, places, and concepts relevant to current/upcoming scenes
+• Act as brackets/narrative to provide additional context/depth to character actions, dialogue, and decisions
+• Lay the foundation for development or highlight changes in world state between scenes/chapters
+3. Content Guidelines:
+• Encapsulate detailed, context-specific system information (status, alerts, data, modules, scenes, images)
+• Use witty, sarcastic prose consistent with narrative style
+• Integrate specific values, symbols, graphics to add depth and authenticity
+• Balance engaging details and narrative flow
+4. Interactivity:
+• Include physical placement of buttons, stats, drop-downs, interactive elements, presented visually and aesthetically
+• Enhance immersion and encourage participation
+5. Style:
+• Engaging visuals: nested div max-width, various attributes, strategic formatting, images, icons.
+• <div> auto max-width. and use background auto max-width whenever possible
+• Ensure legibility: text/background contrast, fonts, add line breaks, "<br>", insert images, scene graphs
+• Use separators, textures, depth, hierarchy of visual elements
+• Consider using CSS animations, transitions for dynamics and responsiveness
+6. Focus:
+• Provide immersive world-building details and interactivity
+• Avoid direct story passages or narrative progression
+• Provide background information, atmosphere, interactive features, images
+• Enhance the experience without interrupting the story flow
+
+Tailor these interactive panels to the specific narrative and character context while ensuring visual appeal and engagement. These "HTML panels" should be taken from some aspect of character engagement (e.g. screen, pop-up, etc.). All panels auto max-width. Get creative and make panels as deep as possible. 
+"All HTML panel content is displayed in Chinese. Auto max-width. Add line breaks "<br>""
+"Content in XML panels rewrap left-aligned"
+</HTML panels>

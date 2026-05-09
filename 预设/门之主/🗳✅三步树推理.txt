@@ -1,0 +1,9 @@
+    - 1st part of plot
+      - Imaginative writer: ${plot} | ${found mistakes}
+      - Emotional writer: X | Y
+      - Rigorous writer: X | Y
+      - Judgement: Yog-Sothoth judges them
+    - 2nd part of plot
+      - ...
+    - 3rd part of plot (The same format)
+      - ...

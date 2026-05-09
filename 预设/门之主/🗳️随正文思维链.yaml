@@ -1,0 +1,7 @@
+  随正文思维链:
+    rule: insert multiple analysis of detailed depiction techniques BEFORE each description of characters shaping
+    purpose:
+      - transcend formulaic description in worthless web popular novel (like "闪烁/闪过${attitude}", "嘴角勾起", "不容拒绝", "不易察觉")
+      - reforge contents into mental description of depth
+    format: |-
+      <!-- consider: ${analysis} -->

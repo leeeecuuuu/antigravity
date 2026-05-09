@@ -1,0 +1,451 @@
+```html
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>阿斯特兰公报 - 夜幕版</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=ZCOOL+XiaoWei&display=swap');
+      :root {
+        --glass-bg: rgba(28, 25, 38, 0.88); /* 深邃的紫黑背景 */
+        --glass-border: rgba(150, 120, 180, 0.4); /* 淡紫色边框 */
+        --glass-shadow: rgba(0, 0, 0, 0.25); /* 适配暗色系的阴影 */
+        --text-primary: #ede7f6; /* 主要文字，明亮的淡紫色 */
+        --text-secondary: #b3a5d1; /* 次要文字，柔和的灰紫色 */
+        --accent-purple: #9575cd; /* 核心点缀紫 */
+        --highlight-bg: rgba(149, 117, 205, 0.15); /* 紫色高光背景 */
+        --font-main: 'Inter', 'ZCOOL XiaoWei', system-ui, -apple-system, sans-serif;
+      }
+      body {
+        font-family: var(--font-main);
+        background-color: transparent;
+        padding: 0;
+      }
+      .gazette-container {
+        background-color: var(--glass-bg);
+        backdrop-filter: blur(8px);
+        -webkit-backdrop-filter: blur(8px);
+        border: 1px solid var(--glass-border);
+        border-radius: 12px;
+        margin-bottom: 16px;
+        box-shadow: 0 5px 20px var(--glass-shadow);
+        overflow: hidden;
+        transition: all 0.2s ease-in-out;
+        max-width: 800px;
+        margin: 20px auto;
+      }
+      .gazette-container::before {
+          content: '❖ 阿斯特兰公报 ❖';
+          display: block;
+          text-align: center;
+          font-family: 'ZCOOL XiaoWei', serif;
+          font-size: 0.8em;
+          font-weight: 400;
+          padding: 6px;
+          color: var(--text-secondary);
+          background-color: rgba(150, 120, 180, 0.1);
+          border-bottom: 1px solid var(--glass-border);
+          letter-spacing: 1.5px;
+      }
+      .gazette-header {
+        display: block;
+        width: 100%;
+        padding: 12px 16px;
+        border-bottom: 1px solid var(--glass-border);
+        cursor: pointer;
+        position: relative;
+        text-align: left;
+        color: var(--text-primary);
+        transition: background-color 0.2s ease;
+      }
+      .gazette-header:hover {
+        background-color: rgba(150, 120, 180, 0.1);
+      }
+      .gazette-header::after {
+        content: '›';
+        position: absolute;
+        right: 18px;
+        top: 50%;
+        transform: translateY(-50%) rotate(0deg);
+        font-size: 1.8em;
+        font-weight: 400;
+        color: var(--text-secondary);
+        transition: transform 0.3s ease;
+      }
+      .gazette-container[open] > .gazette-header::after {
+        transform: translateY(-50%) rotate(90deg);
+      }
+      .gazette-header::-webkit-details-marker,
+      .gazette-header::marker {
+        display: none;
+      }
+      .status-info {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 4px 16px;
+        align-items: center;
+      }
+      .status-segment {
+        font-size: 0.9em;
+        color: var(--text-primary);
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-weight: 500;
+      }
+      .status-segment::before {
+          font-family: "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+          font-size: 1.1em;
+          opacity: 0.8;
+      }
+      .status-segment.date::before { content: '📜'; }
+      .status-segment.place::before { content: '📍'; }
+      .gazette-content {
+        padding: 16px;
+        animation: fadeIn 0.5s ease;
+      }
+      @keyframes fadeIn {
+          from { opacity: 0; transform: translateY(-10px); }
+          to { opacity: 1; transform: translateY(0); }
+      }
+      .tab-navigation {
+        display: flex;
+        border-bottom: 1px solid var(--glass-border);
+        margin-bottom: 16px;
+        padding-bottom: 2px;
+      }
+      .tab-btn {
+        flex: 1;
+        padding: 8px 15px;
+        background: transparent;
+        border: none;
+        border-bottom: 3px solid transparent;
+        margin-bottom: -3px;
+        font-size: 0.95em;
+        font-weight: 600;
+        color: var(--text-secondary);
+        cursor: pointer;
+        transition: all 0.3s ease;
+      }
+      .tab-btn:hover {
+        background-color: var(--highlight-bg);
+      }
+      .tab-btn.active {
+        color: var(--accent-purple);
+        border-bottom-color: var(--accent-purple);
+      }
+      .tab-content { display: none; }
+      .tab-content.active { display: block; }
+      .mission-item {
+          background-color: rgba(150, 120, 180, 0.1);
+          border: 1px solid transparent;
+          border-left: 4px solid var(--text-secondary);
+          border-radius: 6px;
+          padding: 12px;
+          margin-bottom: 12px;
+          transition: all 0.2s ease;
+      }
+      .mission-item:hover {
+          box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+          transform: translateY(-2px);
+          border-color: var(--glass-border);
+      }
+      .mission-item.main-quest {
+          border-left-color: var(--accent-purple);
+          background-color: var(--highlight-bg);
+      }
+      .mission-title {
+          font-weight: 600;
+          color: var(--text-primary);
+          margin-bottom: 4px;
+          font-size: 1.05em;
+      }
+      .mission-desc {
+          font-size: 0.95em;
+          color: var(--text-secondary);
+          padding-left: 20px;
+          line-height: 1.6;
+      }
+      .mission-type {
+          float: right;
+          font-size: 0.75em;
+          padding: 3px 10px;
+          border-radius: 12px;
+          background-color: rgba(150, 120, 180, 0.2);
+          color: var(--text-secondary);
+          font-weight: 600;
+      }
+      .news-item {
+          display: flex;
+          justify-content: space-between;
+          align-items: flex-start;
+          padding: 10px 4px;
+          border-bottom: 1px solid var(--glass-border);
+      }
+      .news-item:last-child { border-bottom: none; }
+      .news-text {
+          color: var(--text-primary);
+          line-height: 1.7;
+      }
+      .news-text::before {
+          content: '›';
+          margin-right: 10px;
+          font-weight: bold;
+          color: var(--accent-purple);
+      }
+      .news-source {
+          font-size: 0.85em;
+          color: var(--text-secondary);
+          opacity: 0.8;
+          font-style: italic;
+          white-space: nowrap;
+          margin-left: 16px;
+      }
+      .map-container {
+          background: rgba(150, 120, 180, 0.08);
+          border: 1px solid var(--glass-border);
+          padding: 20px;
+          border-radius: 8px;
+          min-height: 250px;
+      }
+      .map-location-group { margin-bottom: 24px; }
+      .map-location-group:last-child { margin-bottom: 0; }
+      .map-main-location {
+          font-family: 'ZCOOL XiaoWei', serif;
+          font-size: 1.1em;
+          font-weight: 400;
+          color: var(--text-primary);
+          text-align: center;
+          margin-bottom: 16px;
+          border-bottom: 1px solid var(--glass-border);
+          padding-bottom: 8px;
+      }
+      .map-nodes-container {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 16px;
+          justify-content: center;
+      }
+      .map-sub-location {
+          background-color: rgba(15, 12, 25, 0.6);
+          border: 1px solid var(--glass-border);
+          border-radius: 6px;
+          padding: 8px 12px;
+          text-align: center;
+          min-width: 120px;
+          box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+          transition: all 0.2s ease;
+      }
+      .map-sub-location:hover {
+          transform: translateY(-3px);
+          box-shadow: 0 3px 6px rgba(0, 0, 0, 0.2);
+          border-color: var(--text-secondary);
+      }
+      .map-sub-location.current {
+          border: 2px solid var(--accent-purple);
+          background-color: rgba(28, 25, 38, 0.8);
+          box-shadow: 0 0 10px rgba(149, 117, 205, 0.3);
+      }
+      .map-sub-name {
+          font-weight: 600;
+          color: var(--text-secondary);
+      }
+      .map-sub-location.current .map-sub-name {
+          color: var(--text-primary);
+      }
+      .map-tags-container { display: flex; flex-direction: column; gap: 4px; margin-top: 8px; }
+      .map-tag {
+          font-size: 0.8em;
+          padding: 2px 6px;
+          border-radius: 4px;
+          display: inline-block;
+          background-color: rgba(150, 120, 180, 0.2);
+          border: 1px solid transparent;
+          color: var(--text-secondary);
+      }
+      .map-tag::before { margin-right: 4px; }
+      .map-tag.character::before { content: '●'; font-size: 0.8em; opacity: 0.7; }
+      .map-tag.event::before { content: '★'; color: var(--accent-purple); }
+      .map-empty-message, .list-empty-message {
+          text-align: center;
+          padding: 20px;
+          font-style: italic;
+          color: var(--text-secondary);
+          opacity: 0.8;
+      }
+      @media (max-width: 768px) {
+          .tab-btn { font-size: 0.8em; }
+          .news-item { flex-direction: column; align-items: flex-start; gap: 4px; }
+          .news-source { margin-left: 0; }
+      }
+    </style>
+</head>
+<body>
+  <details class="gazette-container">
+    <summary class="gazette-header">
+      <div class="status-info">
+        <span class="status-segment date">$1</span>
+        <span class="status-segment place">$2</span>
+      </div>
+    </summary>
+    <div class="gazette-content">
+      <div class="tab-navigation">
+        <button class="tab-btn active" data-tab="mission">任务日志</button>
+        <button class="tab-btn" data-tab="news">世界情报</button>
+        <button class="tab-btn" data-tab="map">区域地图</button>
+      </div>
+      <div class="tab-content active" data-content="mission">
+        <div class="mission-log-container" data-mission="$3"></div>
+      </div>
+      <div class="tab-content" data-content="news">
+        <div class="news-list" data-news="$4"></div>
+      </div>
+      <div class="tab-content" data-content="map">
+        <div class="map-container" data-map="$5" data-current-place="$2"></div>
+      </div>
+    </div>
+  </details>
+  <script>
+    if (window.jQuery) {
+      $(() => {
+        function initTabSwitching(container) {
+          container.find('.tab-btn').on('click', function () {
+            const $btn = $(this);
+            const targetTab = $btn.data('tab');
+            const $contentArea = $btn.closest('.gazette-content');
+            $contentArea.find('.tab-btn').removeClass('active');
+            $btn.addClass('active');
+            $contentArea.find('.tab-content').removeClass('active');
+            $contentArea.find(`.tab-content[data-content="${targetTab}"]`).addClass('active');
+          });
+        }
+        function parseMissionData(container) {
+            const $log = container.find('.mission-log-container');
+            const missionData = $log.data('mission');
+            $log.empty();
+            if (!missionData || typeof missionData !== 'string' || missionData.startsWith('$')) {
+                $log.html('<div class="list-empty-message">暂无任务记录</div>');
+                return;
+            }
+            const missions = missionData.split(';').map(m => m.trim()).filter(m => m);
+            if (missions.length === 0) {
+                $log.html('<div class="list-empty-message">暂无任务记录</div>');
+                return;
+            }
+            missions.forEach(missionStr => {
+                const [typePart, contentPart] = missionStr.split(/:(.*)/s);
+                if (!contentPart) return;
+                const type = typePart.trim();
+                const [title, desc] = contentPart.split('|').map(s => s.trim());
+                const $item = $('<div>').addClass('mission-item');
+                const $titleDiv = $('<div>').addClass('mission-title').text(title);
+                const $typeSpan = $('<span>').addClass('mission-type');
+                if (type === '主线') {
+                    $item.addClass('main-quest');
+                    $typeSpan.text('主线');
+                } else if (type === '支线') {
+                    $typeSpan.text('支线');
+                } else if (type === '感情线') {
+                    $typeSpan.text('感情线');
+                }
+                $titleDiv.prepend($typeSpan);
+                $item.append($titleDiv);
+                if (desc) {
+                    const $descDiv = $('<div>').addClass('mission-desc').text(desc);
+                    $item.append($descDiv);
+                }
+                $log.append($item);
+            });
+        }
+        function parseNewsData(container) {
+            const $list = container.find('.news-list');
+            const newsData = $list.data('news');
+            $list.empty();
+            if (!newsData || typeof newsData !== 'string' || newsData.startsWith('$')) {
+                $list.html('<div class="list-empty-message">暂无最新情报</div>');
+                return;
+            }
+            const newsItems = newsData.split(';').map(item => item.trim()).filter(item => item);
+            if (newsItems.length === 0) {
+                $list.html('<div class="list-empty-message">暂无最新情报</div>');
+                return;
+            }
+            newsItems.forEach(item => {
+                const match = item.match(/^\[([^\]]+)\]\s*(.*)$/);
+                const source = match ? match[1] : '未知来源';
+                const text = match ? match[2] : item;
+                const $item = $('<div>').addClass('news-item');
+                const $text = $('<span>').addClass('news-text').text(text);
+                const $source = $('<span>').addClass('news-source').text(`— ${source}`);
+                $item.append($text).append($source);
+                $list.append($item);
+            });
+        }
+        function parseMapData(container) {
+            const $map = container.find('.map-container');
+            const mapData = $map.data('map');
+            const currentPlace = $map.data('current-place') || '';
+            $map.empty();
+            if (!mapData || typeof mapData !== 'string' || mapData.startsWith('$')) {
+                $map.html('<div class="map-empty-message">无可用地图信息</div>');
+                return;
+            }
+            const mainLocations = mapData.split('[').slice(1);
+            if(mainLocations.length === 0) {
+                $map.html('<div class="map-empty-message">无可用地图信息</div>');
+                return;
+            }
+            mainLocations.forEach(locString => {
+                const parts = locString.split(']');
+                const mainName = parts[0];
+                const subData = parts[1] || '';
+                const $group = $('<div>').addClass('map-location-group');
+                const $mainDiv = $('<div>').addClass('map-main-location').text(mainName);
+                $group.append($mainDiv);
+                const $nodesContainer = $('<div>').addClass('map-nodes-container');
+                const subLocations = subData.split('|').map(s => s.trim()).filter(s => s);
+                subLocations.forEach(subStr => {
+                    const nameMatch = subStr.match(/^[^@#]*/);
+                    const subName = nameMatch ? nameMatch[0] : '未知地点';
+                    const charMatch = subStr.match(/@([^#]*)/);
+                    const characters = charMatch ? charMatch[1].split(',').map(c => c.trim()).filter(Boolean) : [];
+                    const eventMatch = subStr.match(/#([^@]*)/);
+                    const events = eventMatch ? eventMatch[1].split(',').map(e => e.trim()).filter(Boolean) : [];
+                    const $subDiv = $('<div>').addClass('map-sub-location');
+                    if (currentPlace && currentPlace.includes(subName) && !currentPlace.startsWith('$')) {
+                        $subDiv.addClass('current');
+                    }
+                    const $nameDiv = $('<div>').addClass('map-sub-name').text(subName);
+                    $subDiv.append($nameDiv);
+                    if (characters.length > 0 || events.length > 0) {
+                        const $tagsContainer = $('<div>').addClass('map-tags-container');
+                        characters.forEach(char => {
+                            $tagsContainer.append($('<span>').addClass('map-tag character').text(char));
+                        });
+                        events.forEach(event => {
+                            $tagsContainer.append($('<span>').addClass('map-tag event').text(event));
+                        });
+                        $subDiv.append($tagsContainer);
+                    }
+                    $nodesContainer.append($subDiv);
+                });
+                $group.append($nodesContainer);
+                $map.append($group);
+            });
+        }
+        function initializeGazette(container) {
+            initTabSwitching(container);
+            parseMissionData(container);
+            parseNewsData(container);
+            parseMapData(container);
+        }
+        $('.gazette-container').each(function() {
+            initializeGazette($(this));
+        });
+      });
+    }
+  </script>
+</body>
+</html>
+```

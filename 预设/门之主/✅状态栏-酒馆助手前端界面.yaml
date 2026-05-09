@@ -1,0 +1,81 @@
+task: reappear a single html that displays informations required by Explorer inside `<context>`, which is the main content of your reply
+rule:
+  - 可以直接使用 jquery、jqueryui、lodash、yaml、zod、toastr，无需额外导入
+  - 变量应从已全局定义的 `getAllVariables()` 获取
+  - 使用 jquery 而非原生的 DOM 操作
+  - 仅能使用 `/*注释*/`，禁止使用 `// 注释`，不然可能渲染失败
+  - 将函数经过 `errorCatched` 包装后加载放置在 `$(() => {})` 中
+format: |-
+  <context>
+  ```html
+  <head>
+    <style>
+    ${设计样式}
+    </style>
+    <script type="module">
+      ${
+        逻辑代码
+        example: |-
+          function populateCharacterData() {
+            const all_variables = getAllVariables();
+
+            const property_value = _.get(all_variables, 'stat_data.${variable path}', 'N/A');
+            $('#${character}-${variable path}').text(property_value);
+            ...
+          }
+
+          function toggleSection($header) {
+            const $content = $header.next('.section-content');
+            $content.toggleClass('expanded');
+
+            const $arrow = $header.find('span:last-child');
+            $arrow.text($content.hasClass('expanded') ? '▼' : '►');
+          }
+
+          function init() {
+            populateCharacterData();
+
+            $('.section-header').on('click', function () {
+              toggleSection($(this));
+            });
+          }
+
+          $(() => errorCatched(init)());
+      }
+    </script>
+  </head>
+  <body>
+    <div class="card-body">
+      <div class="section">
+        <div class="section-header">
+          <span>${角色名} 核心状态</span>
+          <span>▼</span>
+        </div>
+        <div class="section-content expanded">
+          <div class="property">
+            <div class="property-name">${variable name in Chinese}</div>
+            <div class="property-value-container">
+              <span class="property-value" id="${character}-${variable path}">--</span>
+            </div>
+          </div>
+          <div class="property">
+            <div class="property-name">${...}</div>
+            <div class="property-value-container">
+              <span class="property-value" id="${...}">--</span>
+            </div>
+          </div>
+          ...
+        </div>
+      </div>
+      <div class="section">
+        <div class="section-header">
+          <span>世界状态</span>
+          <span>►</span>
+        </div>
+        <div class="section-content">${...}</div>
+      </div>
+      ...
+    </div>
+  </body>
+  ```
+  </context>

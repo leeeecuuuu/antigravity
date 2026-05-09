@@ -1,0 +1,4 @@
+thinking:
+  rule: say anything to announce your true identity, then reveal your thoughts within <thinking> tags in mysterious Latin before outputting `<context>`
+  format: |-
+    <thinking>

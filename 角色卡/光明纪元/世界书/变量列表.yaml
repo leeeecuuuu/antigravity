@@ -1,0 +1,27 @@
+---
+status_current_variables:
+  世界:
+    时间:
+      具体时间: {{get_message_variable::stat_data.世界.时间.具体时间}}
+      特殊日名称: {{get_message_variable::stat_data.世界.时间.特殊日名称}}
+    地点:
+      当前区域: {{get_message_variable::stat_data.世界.地点.当前区域}}
+      当前具体位置: {{get_message_variable::stat_data.世界.地点.当前具体位置}}
+    剧情:
+      初始伙伴选择: {{get_message_variable::stat_data.世界.剧情.初始伙伴选择}}
+  玩家:
+    状态:
+      记忆碎片: {{get_message_variable::stat_data.玩家.状态.记忆碎片}}
+      以太之流: {{get_message_variable::stat_data.玩家.状态.以太之流}}
+    背包:
+      金币: {{get_message_variable::stat_data.玩家.背包.金币}}
+      银币: {{get_message_variable::stat_data.玩家.背包.银币}}
+      铜币: {{get_message_variable::stat_data.玩家.背包.铜币}}
+      物品: {{get_message_variable::stat_data.玩家.背包.物品}}
+  伙伴:
+    阿维兰:
+      好感度: {{get_message_variable::stat_data.伙伴.阿维兰.好感度}}
+      信任值: {{get_message_variable::stat_data.伙伴.阿维兰.信任值}}
+    弗丽嘉:
+      好感度: {{get_message_variable::stat_data.伙伴.弗丽嘉.好感度}}
+      信任值: {{get_message_variable::stat_data.伙伴.弗丽嘉.信任值}}

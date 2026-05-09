@@ -1,0 +1,665 @@
+<API_Prompt_Structure_Guide>
+# 核心原则: 模型交互的指令框架由"系统指令"与"消息序列"两个独立且互补的组件构成
+# 系统指令 (System Prompt) 负责定义模型的宏观行为与身份,而消息序列 (Messages Array) 则负责提供具体的对话上下文与任务细节
+
+# 1. 系统指令 (System_Prompt): 模型的全局行为准则
+#   作用: 用于在用户回合开始前,为模型植入高级别的上下文/指令/个性/约束
+#   定位: 一个独立于对话历史的专属参数
+#   指导方针:
+#     - **身份定义**: 明确指定模型的角色/专家领域/交流风格
+#     - **规则设定**: 设定输出内容的格式/遵循的规则/需要规避的行为
+#     - **目标确立**: 指示模型在整个交互中需要达成的核心目标或任务
+
+# 2. 消息序列 (Messages_Array): 对话流程与上下文管理
+#   作用: 以结构化的方式提供对话历史,引导模型生成符合上下文的下一轮回复
+#   标准格式:
+#     - **基本单元**: 序列由一个或多个消息对象组成
+#     - **对象结构**: 每个消息对象必须包含两个键: `role` (角色) 与 `content` (内容)
+#   核心规则_角色交替:
+#     - **起始角色**: 序列中的第一个消息对象的`role`必须是`user`
+#     - **交替顺序**: `role`必须在`user`与`assistant`之间严格交替。任何连续的相同`role`都将导致指令解析失败
+#     - **有效序列示例**:
+#       - 单轮: `[{role: user, content: ...}]`
+#       - 多轮: `[{role: user, content: ...}, {role: assistant, content: ...}, {role: user, content: ...}]`
+#   应用技巧:
+#     - **上下文模拟**: 通过构建一个包含多轮`user`/`assistant`交替的序列,为模型提供丰富的对话背景,以确保其回应的连贯性与相关性
+#     - **范例引导 (Few-shot)**: 在序列中提供一或多个完整的"提问-回答"范例(`user`-`assistant`对),以精确指导模型按特定格式或风格进行输出
+</API_Prompt_Structure_Guide>
+<Clear_and_Direct_Instructions>
+# 核心原则: 指令清晰化
+# 指导思想: 将所有指令视为对一个无任何背景信息&仅能理解字面含义的执行者的任务分配。指令的每一部分都必须是明确&具体&可操作的
+
+# 1. 指令的元规范 (Meta-Specification)
+#    - 定义: 假设模型对任务背景/您的偏好/任何隐含的上下文都完全未知
+#    - 指导:
+#      - 每一个指令都应包含完成任务所需的全部信息
+#      - 使用“将您的回复限定在[X]个单词以内”来替代“请简短回复”
+#      - 使用“采纳[专家角色]的身份”来替代“请用专业的口吻”
+
+# 2. 输出格式的精确控制 (Precise Control of Output Format)
+#    - 定义: 对输出内容的结构&格式&前缀&后缀&组成部分进行严格规定
+#    - 指导:
+#      - **直接呈现**: 若指令为“创作一首关于海洋的诗”,可追加“直接开始诗歌内容,无需任何前言或标题”
+#      - **元素限定**: 若需要一个唯一的答案,指令应为“仅输出最终答案的名称,禁止包含任何解释/标点/多余词汇”
+#      - **结构化输出**: 要求模型按照指定的格式生成内容,例如JSON/Markdown表格/特定的XML结构
+
+# 3. 立场与决策的强制指定 (Mandatory Specification of Stance and Decision)
+#    - 定义: 克服模型提供中立&平衡性答案的默认倾向,强制其采纳一个明确的立场或做出唯一选择
+#    - 指导:
+#      - **消除模糊**: 在提出有争议性的问题时,追加指令以强制决策。例如“我知道关于‘史上最佳篮球运动员’有多种观点,但如果你必须选择一位,他是谁？”
+#      - **指定视角**: 指导模型从一个特定的&非中立的视角进行论述,例如“从纯粹主义批评家的角度,分析这部电影的缺点”
+
+# 4. 任务要求的全面量化 (Comprehensive Quantification of Task Requirements)
+#    - 定义: 将所有模糊的&定性的要求,转化为精确的&定量的指标
+#    - 指导:
+#      - **长度量化**: 使用具体的数字定义内容的长度,例如“撰写一个不少于800字的故事”或“生成5个不同的广告标语”
+#      - **范围量化**: 明确定义生成内容的范围和数量,例如“列出3个主要优点和2个次要缺点”
+
+# 5. 核心参数的预先定义 (A Priori Definition of Core Parameters)
+#    - 定义: 在任务开始前,明确设定影响全局输出的基础性参数,如语言/风格/角色等
+#    - 指导:
+#      - **语言指定**: 在System Prompt或指令开头明确“请使用西班牙语回答所有问题”
+#      - **角色扮演**: 定义模型的角色身份以统一输出的口吻与知识背景,例如“你是一名资深的科幻小说编辑,请审阅以下稿件并提供反馈”
+</Clear_and_Direct_Instructions>
+<Role_Prompting_Principles>
+# 指导原则: 角色设定提示 (Role Prompting)
+# 定义: 为模型设定一个具体的身份/角色/专家领域,引导其在特定语境下进行思考和回应,以提升输出内容的专业性&准确性&风格化
+
+# 1. 核心目标
+  # 1.1. 性能强化: 在处理逻辑&数学&编码等需要严谨思维的任务时,通过赋予专家角色(如"逻辑学家"/"资深程序员"),显著提升问题的解决率和答案的准确度
+  # 1.2. 风格控制: 精确控制输出文本的语调&风格&复杂度。通过设定角色(如"诗人"/"儿童故事作家"),使生成内容符合特定的文体要求
+  # 1.3. 上下文聚焦: 为模型提供一个清晰的视角和必要的背景知识,使其能够摒弃无关信息,专注于当前任务的核心需求
+
+# 2. 构建方法
+  # 2.1. 角色具体化:
+    # 指导: 角色的定义应具体&清晰。细节越丰富,模型扮演的效果越好
+    # 标准: "你是一位拥有10年经验&专攻Python数据分析的资深软件工程师" 优于 "你是一位程序员"
+  # 2.2. 视角与受众定义:
+    # 指导: 明确角色的沟通对象(受众),可以进一步调整输出内容的口吻与深度
+    # 标准: 在角色定义后,补充沟通场景,如"你正在向一群无技术背景的市场部同事解释这个技术概念"
+  # 2.3. 结构化指令:
+    # 指导: 使用结构化的指令来定义角色及其任务
+    # 标准:
+      # 角色: [身份/职业]
+      # 背景: [经验/领域/特质]
+      # 任务: [需要完成的具体工作]
+      # 受众: [沟通对象及其背景]
+
+# 3. 应用场景指南
+  # 3.1. 逻辑与数学任务:
+    # 策略: 赋予模型"逻辑机器人"/"数学教授"/"严谨的步骤检查员"等角色
+    # 指示: 指导其必须进行分步思考(Step-by-Step),并在最后给出结论
+  # 3.2. 创意与写作任务:
+    # 策略: 赋予模型"莎士比亚风格的诗人"/"悬疑小说家"/某一特定文学作品中的角色
+    # 指示: 指导其模仿特定风格的用词&句式&叙事节奏
+  # 3.3. 专业内容生成:
+    # 策略: 赋予模型"专业编辑"/"资深法律顾问"/"学术论文审稿人"等角色
+    # 指示: 指导其检查内容的准确性&专业术语的运用&逻辑的严密性
+
+# 4. 核心原则
+  # 4.1. 角色优先: 在提示的起始位置明确角色设定,为后续所有指令提供基础语境
+  # 4.2. 持续实验: 角色设定的效果取决于任务的复杂性和具体要求。鼓励通过调整角色的细节/增加或减少约束来寻找最优方案
+</Role_Prompting_Principles>
+<prompt_structuring_principles>
+# 主旨：通过结构化手段,确保模型能精准区分指令与数据,从而提升输出的可靠性与准确性
+
+# 核心原则：指令与数据的分离
+principle: "将固定不变的任务指令(Instructions)与动态变化的用户输入数据(Data)进行严格分离,是构建可预测&可复用&高精度提示词的基础。"
+
+# 具体执行准则
+guidelines:
+  - id: G-01
+    guideline_name: "使用结构化边界进行分离"
+    summary: "通过标准化的技术手段,为指令和数据之间建立清晰&无歧砎的边界。"
+    methods:
+      - method_name: "提示词模板化"
+        definition: "构建一个包含占位符的固定提示词框架,用于在运行时动态填入具体数据。这实现了任务逻辑的复用,并简化了数据注入流程。"
+        objective: "将任务框架(做什么)与具体内容(对什么做)解耦。"
+      - method_name: "XML标签包裹"
+        definition: "将所有可变的用户输入/文档内容/数据片段,使用XML标签(例如：`<document>...</document>`)进行完全包裹。"
+        importance: "**此为首选且必须遵守的方法**。模型经过专门训练,能够高效识别XML标签为结构化分隔符,从而精准定位需要处理的数据,根除将指令误解为数据的可能性。"
+        instruction:
+          - "为所有外部或可变的数据指定一个具有描述性的XML标签名,如`<email_body>`/`<user_question>`。"
+          - "确保每个开启标签`<tag>`都有一个对应的闭合标签`</tag>`。"
+
+  - id: G-02
+    guideline_name: "确保指令内容的绝对清晰"
+    summary: "指令的语言质量直接决定了模型理解的深度和准确性。微小的模糊或错误都可能导致输出的偏差。"
+    action_points:
+      - "使用精确&无歧义的词汇进行指令描述。"
+      - "消除指令文本中的任何拼写错误/语法错误/不当的标点符号。"
+      - "指令的表达应直接且明确,避免使用比喻/讽刺/过于口语化的表达方式,除非这是任务的特定要求。"
+</prompt_structuring_principles>
+<output_control_guidelines>
+principle: 通过精确的格式化指令与响应预设,引导并规范化模型的输出内容与结构
+output_formatting:
+  summary: 在用户指令中明确定义输出应遵循的数据格式,以确保内容的结构化与可解析性
+  methods:
+    - method: 显式格式指令
+      description: 直接向模型下达指令,要求其使用指定的格式,例如XML或JSON
+    - method: XML标签封装
+      description: 指令模型将全部或部分回答内容置于特定的XML标签内,便于后续的程序化提取
+      example_instruction: 请将俳句置于<haiku>标签内
+    - method: JSON结构化输出
+      description: 要求模型以JSON对象格式输出,并预先定义所需的键名(keys)与数据结构
+      example_instruction: 请使用JSON格式输出,键为'first_line', 'second_line', 'third_line'
+response_prefilling:
+  summary: 在API调用中,预先填充"assistant"角色的初始内容,强制模型从指定起点续写,以此强力引导输出的格式与观点
+  applications:
+    - application: 格式引导
+      description: 将格式的起始部分(例如 `<tag>` 或 `{`)作为预设内容,模型将极大概率遵循此格式完成剩余部分
+      example_prefill:
+        - "<haiku>"
+        - "{"
+    - application: 内容与观点引导
+      description: 将一个特定论点的开端或核心句子作为预设内容,迫使模型必须基于此立场展开论述
+      example_prefill: "斯蒂芬·库里是史上最伟大的篮球运动员,其理由如下："
+advanced_techniques:
+  summary: 结合变量&动态标签&API参数,实现更灵活&高效的输出控制
+  techniques:
+    - technique: 动态标签生成
+      description: 在指令中使用变量来动态生成输出内容的XML标签,使提示词模板具备更高的复用性
+      example_instruction: 将改写后的邮件置于<{style}_email>标签内
+      example_prefill: "<{style}_email>"
+    - technique: 终止序列(Stop Sequences)
+      description: 在API调用中,将输出格式的闭合标签(例如 `</haiku>`)设置为终止序列参数
+      effect: 模型在生成该标签后会立即停止,有效剔除无关结尾,节约成本与响应时间
+</output_control_guidelines>
+<Chain_Of_Thought_Guideline>
+# 指导模型进行分步思考(Chain-of-Thought)的核心方法论
+Chain_Of_Thought_Guideline:
+  principle:
+    - title: 核心原则: 引导模型进行分步思考
+    - description: 对于复杂的/多步骤的/需要细致推理的任务,指示模型在给出最终答案之前,先输出一个详细的思考过程。这种“出声思考”的方式可以显著提升模型逻辑推理的准确性和结果的可靠性
+    - requirement: 思考过程必须被显式地输出。禁止指示模型在内部思考后只提供最终答案,这种方式无法触发有效的推理过程
+  implementation:
+    - title: 具体实现方法
+    - method_1:
+        name: 指令化步骤
+        description: 在提示词中明确定义模型需要遵循的&有序的执行步骤。使用祈使句和序列词(例如：第一步, 第二步, 然后, 最后)来构建清晰的指令流
+    - method_2:
+        name: 结构化思考空间
+        description: 使用XML标签(如`<thinking>`, `<brainstorm>`, `<scratchpad>`, `<analysis>`等)为模型的思考过程创建一个专门的&结构化的输出区域
+        instruction: 指示模型在指定的XML标签内完成所有中间步骤的推理/分析/信息检索,然后在标签外输出最终的&格式化的答案
+        example: "任务：回答一个复杂问题。指令：'首先,在<thinking>标签内,分解问题并列出你的推理步骤。然后,在标签外给出你的最终答案。'"
+    - method_3:
+        name: 结合角色扮演
+        description: 将分步思考与角色扮演(Role-Playing)相结合,可以进一步提升输出质量。为模型设定一个专家角色,并要求它像该专家一样进行思考和分析
+        example: "'你是一位资深的影评人。请先在<analysis>标签内分析这篇影评的正反论点,然后再判断其整体情感倾向。'"
+  key_considerations:
+    - title: 关键注意事项与偏见规避
+    - point_1:
+        name: 选项顺序敏感性
+        description: 模型可能倾向于选择在提示词中靠后出现的选项。这是一种固有的偏见
+        mitigation: 在进行选择或分类任务时,如果关注绝对中立性,可以通过在不同请求中轮换选项顺序来测试和校准模型的偏好
+    - point_2:
+        name: 作为调试与修正工具
+        description: 当模型初次回答错误时,引入分步思考是修正其逻辑&提升准确率的首选方法。它能有效暴露并纠正模型在事实检索/逻辑判断/细节理解上的偏差
+  application_examples:
+    - title: 应用场景示例
+    - scenario_1:
+        name: 复杂分类任务(如邮件分类)
+        steps:
+          - 1. 在提示词中完整&清晰地列出所有分类选项及其定义
+          - 2. 指示模型首先对输入内容(如邮件)进行分析和摘要,并将此过程置于<analysis>标签内
+          - 3. 要求模型基于分析,从给定的分类中选择最合适的一项
+          - 4. (可选)要求模型将最终的分类标签(如'B')包裹在特定的格式化标签中(如`<answer>B</answer>`),以实现精确的&可机读的输出
+    - scenario_2:
+        name: 带有约束条件的事实问答
+        steps:
+          - 1. 原始任务："找一部由1956年出生的演员主演的著名电影。"
+          - 2. 修正指令："首先,在<brainstorm>标签中,列出一些著名演员及其出生年份。然后,筛选出1956年出生的演员。最后,从这些演员中选择一位并说出他主演的著名电影。"
+          - 3. 成果：该方法通过将任务分解为“头脑风暴-筛选-回答”三个步骤,将一个容易出错的复杂查询转化为一个高成功率的简单流程
+</Chain_Of_Thought_Guideline>
+<Few_Shot_Prompting_Guide>
+# 定义: Few-Shot Prompting (示例引导)是一种通过在提示词中提供一个或多个完整&高质量的示例来指导模型完成特定任务的技术。模型将学习并模仿这些示例的逻辑&风格&格式
+
+# 核心原则:
+#   - **一致性**: 所有示例的结构和格式必须保持高度一致
+#   - **清晰性**: 示例的“输入”与“输出”关系必须明确无误
+#   - **相关性**: 示例应与最终需要模型处理的任务高度相关
+
+# 指导框架:
+#   1. **定义任务目标**: 明确模型需要完成的具体任务,例如: 文本分类/格式提取/语气模仿等
+#   2. **构建示例集**: 根据任务目标,创建1至N个高质量的示例
+#      - 每个示例都必须包含一个清晰的输入部分和一个完全符合要求的输出部分
+#   3. **组装提示词**: 按照"示例 -> 示例 -> ... -> 待处理任务"的结构组织提示词
+#   4. **使用前缀引导 (Prefill)**: 对于需要特定格式开头的任务,强制设定模型回复的起始内容,以确保格式的准确性
+
+# 应用指南:
+- **场景一: 引导语气与角色 (Tone & Persona)**
+  - **目的**: 让模型模仿特定的说话风格或扮演特定角色
+  - **方法**: 使用对话式(Q&A)的示例
+  - **结构定义**:
+    ```
+    Q: [示例问题1]
+    A: [符合目标角色的示例回答1]
+
+    Q: [示例问题2]
+    A: [符合目标角色的示例回答2]
+
+    Q: [需要模型回答的实际问题]
+    A:
+    ```
+
+- **场景二: 控制输出格式 (Format Control)**
+  - **目的**: 从非结构化文本中提取信息,并以严格的&自定义的格式输出
+  - **方法**: 提供完整的"源文本 -> 格式化输出"的示例,并结合前缀引导(Prefill)
+  - **结构定义**:
+    ```
+    [源文本1]
+    <指定的XML标签>
+    [根据源文本1生成的&完全符合格式的输出内容]
+    </指定的XML标签>
+
+    [源文本2]
+    <指定的XML标签>
+    [根据源文本2生成的&完全符合格式的输出内容]
+    </指定的XML标签>
+
+    [需要模型处理的实际源文本]
+    ```
+  - **前缀引导应用**: 在API调用时,将助手的回复起始内容(prefill)直接设置为`<指定的XML标签>`,强制模型从正确的标签开始生成
+
+- **场景三: 实现特定分类逻辑 (Classification Logic)**
+  - **目的**: 让模型为输入内容分配一个预设的&简洁的分类标签
+  - **方法**: 提供将输入直接映射到最终分类标签的示例
+  - **结构定义**:
+    ```
+    输入: [示例输入1]
+    分类: [分类标签A]
+
+    输入: [示例输入2]
+    分类: [分类标签B]
+
+    输入: [需要模型分类的实际输入]
+    分类:
+    ```
+  - **指导要点**: 输出应极为简洁,仅包含目标标签,避免任何额外的解释性文字,除非任务本身要求
+
+</Few_Shot_Prompting_Guide>
+<factuality_enhancement_guide>
+target: 提升模型生成内容的真实性与准确性,系统性地减少或消除幻觉(Hallucination)现象
+principles:
+  - 指令的设计核心在于约束模型的'过度联想'与'事实创造'倾向,强制其输出内容严格基于已有信息
+  - 通过结构化&分步骤的指令,将复杂的推理任务分解为简单的&可验证的子任务,从而提升可靠性
+strategies:
+  - name: 提供退路：允许模型表达不确定性
+    definition: 当模型面对其知识范围之外或输入材料中未包含信息的问题时,指令应清晰地为其提供一个'无法回答'的选项,以避免模型为了满足'有问必答'的模式而捏造事实
+    guidelines:
+      - 在提问指令的末尾,明确添加一个备选路径
+      - 标准化指令格式："根据[来源]回答[问题]。如果[来源]中未包含足够信息以形成确切答案,请直接回复[指定标识符,如：信息未提供]。"
+      - 量化确定性要求："仅当你有99%以上的把握确定答案来自[来源]时,才进行回答。否则,请声明信息不足。"
+  - name: 循证问答：强制执行“先引用,后回答”的工作流
+    definition: 在处理基于文档的信息提取/总结/问答任务时,强制模型遵循一个严格的&分步骤的逻辑链。此方法通过解构任务流程,确保所有答案均直接源自于提供的材料
+    workflow:
+      - step_1_extraction: 提取证据。指令模型首先在一个指定的思考区域(例如`<scratchpad>`或`<thinking>`标签内),完整地&逐字地抽取出与用户问题直接相关的所有原文片段
+          purpose: 将模型的注意力聚焦于相关文本,避免受到无关信息的干扰
+      - step_2_analysis: 分析证据。指令模型在思考区域内,对提取出的片段进行评估,判断这些片段是否能独立且充分地回答用户的问题
+          purpose: 建立一个内部的逻辑判断环节,验证信息是否满足回答条件
+      - step_3_synthesis: 综合回答。指令模型最终的回答必须严格依据思考区域内的分析结果来生成。若分析结果为信息充分,则基于证据作答；若结果为信息不足,则必须明确指出,并可以引用相关片段说明为何无法回答
+          purpose: 确保最终输出与原始材料之间存在清晰&可追溯的联系
+  - name: 辅助策略：调整生成参数
+    definition: 利用API中的`temperature`参数来控制模型输出的创造性与随机性
+    guidelines:
+      - 对于要求高事实准确性&低创造性的任务(如事实问答/数据提取),将`temperature`参数设置为一个极低的值
+      - 推荐值域：将`temperature`设置为`0.0`至`0.2`之间。值为`0.0`时,模型会倾向于输出最符合逻辑&最确定的结果,从而显著降低产生幻觉的可能性
+</factuality_enhancement_guide>
+<complex_prompt_constructor>
+# 核心原则: 指导高质量&结构化&复杂提示词的构建
+principle:
+  # 定义: 提示词被视为一个由多个独立&有序的功能模块构成的结构化指令集
+  # 目标: 通过清晰的模块划分与逻辑编排,确保LLM能够精确&稳定地理解并执行复杂任务
+  # 方法: 采用“先全面构建,后迭代优化”的策略。初始版本包含所有必要的结构元素以确保功能完整,后续根据测试结果逐步精简与调整
+
+# 结构元素: 定义构成一个完整提示词的六个核心功能模块
+structure_elements:
+  # 1. 角色与情境定义 (Context Definition)
+  # 目的: 设定LLM的基础行为模式与交互背景
+  # 位置: 提示词的最开始部分
+  # 构成:
+  #   - role_definition: 明确定义LLM的角色。例如,"你是一位资深金融分析师"
+  #   - task_goal: 阐明需要完成的总体任务与最终目标。例如,"你的目标是分析财报并提取关键数据"
+  #   - tone_and_style: 规定回应的语气与风格。例如,"保持专业&严谨&客观的语气"
+
+  # 2. 详细指令与规则 (Detailed Instructions & Rules)
+  # 目的: 提供任务执行的具体步骤&约束条件&边界情况处理方案
+  # 位置: 紧随“角色与情境定义”之后
+  # 构成:
+  #   - step_by_step_tasks: 分点列出完成任务所需遵循的具体步骤
+  #   - constraints_and_rules: 设定必须遵守的规则。例如,"生成内容禁止超过500字" 或 "必须基于提供的数据作答"
+  #   - fallback_rules: 定义在遇到未知或无关问题时的标准回应模式。例如,"若问题与职业规划无关,则回应：‘我的专长是提供职业建议,请问您有相关的职业问题吗？’"
+
+  # 3. 范例 (Exemplars)
+  # 目的: 提供一或多个理想的“输入-输出”范例,是引导模型行为最有效的方式之一
+  # 位置: 在指令与规则之后,处理具体输入数据之前
+  # 构成:
+  #   - standard_case: 展示标准情况下的理想互动
+  #   - edge_case: 展示如何处理常见边缘情况或特殊输入的范例
+  #   - format: 所有范例都必须包裹在独立的`<example>`标签内,以明确界定其范围
+
+  # 4. 待处理输入数据 (Input Data Processing)
+  # 目的: 提交需要模型处理的原始信息
+  # 位置: 可以在范例之后,或根据逻辑需要调整
+  # 构成:
+  #   - data_encapsulation: 每一份独立的数据都应使用具有明确语义的XML标签包裹,例如`<document>`/`<user_question>`/`<history>`等
+  #   - variable_injection: 使用占位符(如`{VARIABLE}`)注入动态内容
+
+  # 5. 执行指令 (Execution Directive)
+  # 目的: 在提示词的末尾部分,再次聚焦并指导模型当下的具体行为
+  # 位置: 紧随“待处理输入数据”之后,是用户指令的收尾部分
+  # 构成:
+  #   - immediate_task: 清晰地重申当前需要立即执行的任务。例如,"根据以上信息,回答用户的问题"
+  #   - precognition_or_scratchpad: 指导模型在生成最终答案前,先进行一步内在的思考或分析,并将此过程输出到指定的XML标签(如`<thinking>`)中。这是处理复杂逻辑的关键步骤
+
+  # 6. 输出规格说明 (Output Specification)
+  # 目的: 严格定义最终输出的格式与起点
+  # 位置: 用户指令的最后部分,以及助手回应的起始部分
+  # 构成:
+  #   - output_format: 明确要求最终回应必须使用的结构。例如,"请将你的最终答案放置在<answer></answer>标签内"
+  #   - response_prefill: 在API调用的`assistant`角色中,预先填充回应的起始部分。这能极大地强化格式遵循,并引导输出的起始内容。例如,预填充 `[Joe] <response>`
+
+</complex_prompt_constructor>
+<complex_prompt_constructor>
+# 核心原则: 指导高质量&结构化&复杂提示词的构建
+principle:
+  # 定义: 提示词被视为一个由多个独立&有序的功能模块构成的结构化指令集
+  # 目标: 通过清晰的模块划分与逻辑编排,确保LLM能够精确&稳定地理解并执行复杂任务
+  # 方法: 采用“先全面构建,后迭代优化”的策略。初始版本包含所有必要的结构元素以确保功能完整,后续根据测试结果逐步精简与调整
+
+# 结构元素: 定义构成一个完整提示词的六个核心功能模块
+structure_elements:
+  # 1. 角色与情境定义 (Context Definition)
+  # 目的: 设定LLM的基础行为模式与交互背景
+  # 位置: 提示词的最开始部分
+  # 构成:
+  #   - role_definition: 明确定义LLM的角色。例如,"你是一位资深金融分析师"
+  #   - task_goal: 阐明需要完成的总体任务与最终目标。例如,"你的目标是分析财报并提取关键数据"
+  #   - tone_and_style: 规定回应的语气与风格。例如,"保持专业&严谨&客观的语气"
+
+  # 2. 详细指令与规则 (Detailed Instructions & Rules)
+  # 目的: 提供任务执行的具体步骤&约束条件&边界情况处理方案
+  # 位置: 紧随“角色与情境定义”之后
+  # 构成:
+  #   - step_by_step_tasks: 分点列出完成任务所需遵循的具体步骤
+  #   - constraints_and_rules: 设定必须遵守的规则。例如,"生成内容禁止超过500字" 或 "必须基于提供的数据作答"
+  #   - fallback_rules: 定义在遇到未知或无关问题时的标准回应模式。例如,"若问题与职业规划无关,则回应：‘我的专长是提供职业建议,请问您有相关的职业问题吗？’"
+
+  # 3. 范例 (Exemplars)
+  # 目的: 提供一或多个理想的“输入-输出”范例,是引导模型行为最有效的方式之一
+  # 位置: 在指令与规则之后,处理具体输入数据之前
+  # 构成:
+  #   - standard_case: 展示标准情况下的理想互动
+  #   - edge_case: 展示如何处理常见边缘情况或特殊输入的范例
+  #   - format: 所有范例都必须包裹在独立的`<example>`标签内,以明确界定其范围
+
+  # 4. 待处理输入数据 (Input Data Processing)
+  # 目的: 提交需要模型处理的原始信息
+  # 位置: 可以在范例之后,或根据逻辑需要调整
+  # 构成:
+  #   - data_encapsulation: 每一份独立的数据都应使用具有明确语义的XML标签包裹,例如`<document>`/`<user_question>`/`<history>`等
+  #   - variable_injection: 使用占位符(如`{VARIABLE}`)注入动态内容
+
+  # 5. 执行指令 (Execution Directive)
+  # 目的: 在提示词的末尾部分,再次聚焦并指导模型当下的具体行为
+  # 位置: 紧随“待处理输入数据”之后,是用户指令的收尾部分
+  # 构成:
+  #   - immediate_task: 清晰地重申当前需要立即执行的任务。例如,"根据以上信息,回答用户的问题"
+  #   - precognition_or_scratchpad: 指导模型在生成最终答案前,先进行一步内在的思考或分析,并将此过程输出到指定的XML标签(如`<thinking>`)中。这是处理复杂逻辑的关键步骤
+
+  # 6. 输出规格说明 (Output Specification)
+  # 目的: 严格定义最终输出的格式与起点
+  # 位置: 用户指令的最后部分,以及助手回应的起始部分
+  # 构成:
+  #   - output_format: 明确要求最终回应必须使用的结构。例如,"请将你的最终答案放置在<answer></answer>标签内"
+  #   - response_prefill: 在API调用的`assistant`角色中,预先填充回应的起始部分。这能极大地强化格式遵循,并引导输出的起始内容。例如,预填充 `[Joe] <response>`
+</complex_prompt_constructor>
+<Prompt_Chaining_Strategy>
+# 核心概念: 提示词链 (Prompt Chaining)
+# 定义: 一种通过多轮&连续的对话式交互,将前一轮的输出作为后一轮的输入,从而实现对模型输出进行迭代式修正/递进式增强/序列化任务拆解的高级提示工程技术
+
+# 指导原则与应用策略:
+# 1. 迭代式修正与优化 (Iterative Correction & Optimization)
+#   - 目标: 提升生成内容的准确性与可靠性
+#   - 策略:
+#     - 审查与修正: 在模型给出初步答复后,通过下一轮追问,直接指示其检查并修正潜在的错误
+#       - `user_turn_1`: "列出10个以 'ab' 结尾的单词"
+#       - `assistant_turn_1`: "[可能包含错误单词的列表]"
+#       - `user_turn_2`: "请检查列表,并替换掉所有非真实存在的单词"
+#     - **提供退路 (Give an Out)**: 为防止模型在初始答案正确时进行不必要的修改(过度修正),指令中必须包含一个“无错误”的备用路径
+#       - `user_turn_2_refined`: "请检查列表,并替换掉所有非真实存在的单词。如果所有单词都真实存在,请直接返回原列表"
+
+# 2. 递进式创作与增强 (Progressive Creation & Enhancement)
+#   - 目标: 提升创造性内容的深度&文采&质量
+#   - 策略: 将内容创作过程分解为“初稿”与“精炼”两个阶段
+#     - `user_turn_1`: "写一个关于女孩喜欢跑步的三句话短篇故事"
+#     - `assistant_turn_1`: "[生成一个基础版本的故事]"
+#     - `user_turn_2`: "让这个故事变得更好/更生动/更感人"
+
+# 3. 序列化任务拆解 (Sequential Task Decomposition)
+#   - 目标: 执行需要多个步骤才能完成的复杂任务
+#   - 策略: 将复杂任务拆解为逻辑上前后衔接的子任务链,确保前一个子任务的输出可以作为后一个子任务的直接输入
+#     - **任务链定义**:
+#       - **步骤1: 信息提取 (Extraction)**: 从原始文本中提取结构化数据
+#       - **步骤2: 信息处理 (Processing)**: 对步骤1中提取的数据执行进一步操作
+#     - **执行范例**:
+#       - `user_turn_1`: "从以下文本中找出所有的人名: '文本内容...' "
+#       - `assistant_turn_1 (使用预填充)`: 指导模型以特定格式输出,例如XML标签 `<names>`。模型将生成 `<names>Jesse\nErin\nJoey\nKeisha\nMel</names>`
+#       - `user_turn_2`: "将以下列表按字母顺序排序: [注入assistant_turn_1的输出]"
+#     - **关键指令**: 在需要精确格式传递的步骤中,使用预填充(Prefill)和XML标签来强制模型遵循指定的输出结构,确保任务链的稳定运行。
+</Prompt_Chaining_Strategy>
+<Tool_Use_Methodology>
+# ----------------------------------------------------------------
+# 核心原则 (Core Principle)
+# ----------------------------------------------------------------
+# 定义: 工具使用是一种由LLM与应用层协作完成任务的模式
+#      LLM不直接执行代码,而是生成特定格式的指令(Function Call)
+#      应用层负责解析该指令&执行对应功能&将结果以特定格式返回给LLM
+#      整个过程通过一个多轮&结构化的对话流完成
+Core_Principle: "The core of Tool Use is a collaborative process mediated by a strict syntax. The LLM's role is to generate a structured 'call' instruction, while the application layer is responsible for parsing this instruction, executing the actual tool, and feeding the result back to the LLM for final synthesis."
+
+# ----------------------------------------------------------------
+# 实现流程 (Implementation Flow)
+# ----------------------------------------------------------------
+# 描述: 工具使用的完整生命周期包含四个标准步骤
+Implementation_Flow:
+  # 步骤一: 提示词构建
+  # 目标: 为LLM提供完整的上下文,使其知晓可用的工具及其使用方法
+  Step_1_Prompt_Construction:
+    objective: "To provide the LLM with the necessary context, including general instructions on how to call tools and specific definitions of all available tools"
+    # 组件: 系统提示词(System Prompt)必须包含两个部分
+    components:
+      # 通用指南: 一段标准化的文本,向LLM解释工具调用的基本概念&语法结构&结果反馈机制
+      - general_guidelines: "A standardized section that explains the concept of tool use, the <function_calls> syntax, and the expected <function_results> format"
+      # 工具定义: 一个结构化的XML块,详细描述每个可用工具的名称&功能&所有参数的定义
+      - tool_definitions: "A structured <tools> block that provides a schema for each available function, including its name, description, and parameters"
+
+  # 步骤二: 调用生成
+  # 目标: LLM根据用户需求,决定是否使用工具,并生成符合语法的调用指令
+  Step_2_Invocation_Generation:
+    objective: "Based on the user's query, the LLM determines which tool to use (if any) and generates a syntactically correct <function_calls> block"
+    # 关键行动: LLM的回复内容仅包含<function_calls>...</function_calls>代码块
+    action: "The LLM's response must begin with and contain a <function_calls> block"
+    # 应用层技术: 使用停止序列(stop_sequences),例如 "</function_calls>",来捕获完整的调用指令并中断LLM的当轮生成,以便立即进入执行阶段
+    application_technique: "The application should use a stop sequence, such as '</function_calls>', to intercept the model's output immediately after the call is generated, preventing further text generation"
+
+  # 步骤三: 外部执行
+  # 目标: 应用层解析LLM生成的指令,并执行真实的本地或API功能
+  Step_3_External_Execution:
+    objective: "The application layer parses the LLM-generated <function_calls> block to execute the corresponding native code"
+    # 关键行动:
+    actions:
+      # 解析: 从<function_calls>块中提取工具名称(tool_name)和所有参数(parameters)
+      - "Parse the <function_calls> block to extract the tool name and all its parameters"
+      # 执行: 使用提取的参数调用在应用层中定义的实际函数
+      - "Execute the actual function defined in the application's environment using the extracted parameters"
+
+  # 步骤四: 结果反馈
+  # 目标: 将外部函数的执行结果格式化后,返回给LLM
+  Step_4_Result_Feedback:
+    objective: "To feed the result of the function execution back to the LLM in a structured format it can understand"
+    # 关键行动:
+    actions:
+      # 格式化: 将函数返回值(或错误信息)封装进<function_results> XML块中
+      - "Format the tool's return value into the standardized <function_results> structure"
+      # 反馈: 将包含<function_results>块的内容作为一次新的用户(user)输入,继续之前的对话
+      - "Append the <function_results> block to the conversation history as a new user message"
+    # 预期成果: LLM接收到工具结果后,会基于该结果生成最终的&面向用户的自然语言回答
+    outcome: "The LLM will then use the provided tool result to synthesize a final, human-readable answer to the original query"
+
+# ----------------------------------------------------------------
+# 语法规范 (Syntax Specification)
+# ----------------------------------------------------------------
+# 描述: LLM与应用层之间交互必须严格遵守的XML结构。
+Syntax_Specification:
+  # LLM生成的调用指令结构
+  Function_Call_Structure:
+    # 根标签: 包含一次或多次工具调用
+    wrapper: "<function_calls>"
+    # 单次调用:
+    invocation: "<invoke name='TOOL_NAME'>"
+    # 参数定义:
+    parameter: "<parameter name='PARAMETER_NAME'>PARAMETER_VALUE</parameter>"
+    # 示例:
+    example: |
+      <function_calls>
+        <invoke name="calculator">
+          <parameter name="first_operand">1984135</parameter>
+          <parameter name="second_operand">9343116</parameter>
+          <parameter name="operator">*</parameter>
+        </invoke>
+      </function_calls>
+
+  # 应用层返回的执行结果结构
+  Function_Result_Structure:
+    # 根标签: 包含一个或多个工具的执行结果
+    wrapper: "<function_results>"
+    # 单个结果:
+    individual_result: "<result>"
+    # 工具标识: 必须与调用的工具名称一致
+    tool_identifier: "<tool_name>TOOL_NAME</tool_name>"
+    # 标准输出: 包含工具的返回值(stdout)
+    output_content: "<stdout>TOOL_RESULT</stdout>"
+    # 示例:
+    example: |
+      <function_results>
+        <result>
+          <tool_name>calculator</tool_name>
+          <stdout>
+            18537984339660
+          </stdout>
+        </result>
+      </function_results>
+
+# ----------------------------------------------------------------
+# 工具定义标准 (Tool Definition Standard)
+# ----------------------------------------------------------------
+# 描述: 在系统提示词(System Prompt)中向LLM描述可用工具时必须遵循的格式
+Tool_Definition_Standard:
+  # 根标签
+  wrapper: "<tools>"
+  # 单个工具的描述块
+  tool_block: "<tool_description>"
+  # 组成元素
+  elements:
+    # 工具的唯一名称
+    - name: "<tool_name>"
+    # 工具的功能描述
+    - description: "<description>"
+    # 参数列表的容器
+    - parameters_list: "<parameters>"
+    # 单个参数的定义
+    - parameter_definition:
+        tag: "<parameter>"
+        # 参数的构成
+        components:
+          - name: "<name>"
+          - type: "<type>"
+          - description: "<description>"
+  # 示例:
+  example: |
+    <tools>
+      <tool_description>
+        <tool_name>add_user</tool_name>
+        <description>Adds a new user to the database.</description>
+        <parameters>
+          <parameter>
+            <name>name</name>
+            <type>str</type>
+            <description>The name of the new user.</description>
+          </parameter>
+          <parameter>
+            <name>email</name>
+            <type>str</type>
+            <description>The email address of the new user.</description>
+          </parameter>
+        </parameters>
+      </tool_description>
+    </tools>
+</Tool_Use_Methodology>
+<ai_evaluation_framework>
+evaluation_framework:
+  objective: "建立一个用于评估AI模型输出质量的标准化框架,该框架包含三种核心评估方法,旨在覆盖从客观到主观的各类任务"
+  methods:
+    - type: "基于代码的评估 (Code-Based Grading)"
+      definition: "通过编程逻辑,对模型输出进行自动化&确定性的评估,验证其是否与预设的'黄金标准答案(golden_answer)'完全匹配"
+      applicability:
+        - "任务类型: 分类/特定信息提取/格式转换等具有唯一&客观&标准答案的场景"
+        - "示例: 情感分析(判断为'正面'或'负面'),关键词提取"
+      implementation_guidelines:
+        - "数据集要求: 每个评估项必须包含明确的输入(input)和对应的黄金标准答案(golden_answer)"
+        - "评估逻辑: 编写代码函数,以不区分大小写或移除多余空格的方式,对模型输出和golden_answer进行精确的字符串比对"
+        - "度量指标: 准确率 (Accuracy) = (匹配成功的数量 / 评估总数) * 100%"
+
+    - type: "人工评估 (Human Grading)"
+      definition: "由人类评估员根据一套详细的评估标准(rubric),对模型输出进行主观但结构化的评估"
+      applicability:
+        - "任务类型: 开放式内容生成/创意写作/复杂推理/论点评估等无法用单一标准答案衡量的任务"
+        - "示例: 论文写作评分,对话质量评估"
+      implementation_guidelines:
+        - "评估标准(Rubric)设计: 设计一份清晰&具体的评分指南,详细说明高质量输出应具备的特征(如：清晰的论点/合理的结构/有说服力的例子等)"
+        - "评估流程: 评估员依据Rubric对模型的输出进行打分或定性评价"
+
+    - type: "基于模型的评估 (Model-Based Grading)"
+      definition: "利用一个AI模型('评估模型')来评估另一个AI模型('工作模型')的输出质量,评估过程基于一个明确的评估标准(rubric)"
+      applicability:
+        - "任务类型: 作为人工评估的可扩展替代方案,适用于需要细致判断但可以被规则化的复杂任务"
+        - "示例: 摘要质量评估/事实核查/语气分析"
+      implementation_guidelines:
+        - "双重提示词结构:"
+          - "工作提示词: 指导'工作模型'根据输入(input)生成初始输出(output)"
+          - "评估提示词: 指导'评估模型',向其提供原始任务&工作模型的输出(output)&评估标准(rubric),并要求其根据rubric进行评分(例如1-5分)或判断(例如'正确'或'错误')"
+        - "评估标准(Rubric)要求: 必须清晰&可操作,明确定义需要评估的关键维度。例如,一个高质量的摘要应包含哪些要点,一个准确的事实核查应如何表述"
+</ai_evaluation_framework>
+<RAG_Workflow_Instructions>
+核心目标: 构建一个检索增强生成(RAG)工作流,通过融合外部知识源,系统性地提升模型响应的准确性&相关性&深度
+
+# 阶段一: 检索 (Retrieval)
+检索阶段:
+  目标: 根据用户查询,从一个或多个预定义的知识库中,**精确检索**出最相关的信息片段
+  执行步骤:
+    1. **定义知识源**: 明确本次任务可供检索的知识库范围
+       - 知识库类型: [维基百科, 内部文本文档, 向量数据库, 指定的API接口]
+       - 指导: 必须依据任务需求选择最权威&最相关的知识源
+    2. **执行信息检索**: 将用户查询转化为高效的检索指令
+       - 检索方法: 优先使用语义搜索,辅以关键词匹配,以确保召回信息的全面性与精确性
+       - 输出标准: 返回N个最相关的信息片段(chunks)原文,作为下一阶段的输入
+
+# 阶段二: 整合与增强 (Augmentation & Synthesis)
+整合与增强阶段:
+  目标: 对检索到的原始信息进行处理&提炼&重组,**有效整合**成一个连贯&聚焦的增强上下文(Augmented Context)
+  执行步骤:
+    1. **信息处理**: 对每一个检索到的信息片段进行独立的摘要和关键信息提取
+       - 要求: 摘要需保持中立&客观,并完整保留核心数据&论点&事实
+    2. **上下文构建**: 将所有处理后的信息片段,根据逻辑关系进行排序与融合,构建成一段结构化的背景知识描述
+       - 指导: 该描述是生成阶段的唯一事实依据,必须做到逻辑清晰&内容无冲突
+
+# 阶段三: 生成 (Generation)
+生成阶段:
+  目标: 基于第二阶段构建的增强上下文,生成一个**高质量&高相关性**,并完全忠于所提供信息的最终回复
+  执行步骤:
+    1. **内容创作**: 根据用户的原始指令和增强上下文,创作最终的文本输出
+       - 要求: 回答必须直接响应用户问题,并自然&无缝地融入检索到的知识
+    2. **确保忠实度**: 严格依据增强上下文进行表述,禁止引入任何外部或未经验证的知识
+       - 指导: 若增强上下文中的信息不足以完整回答用户问题,应明确指出信息的局限性,而不是进行主观推测或创造
+</RAG_Workflow_Instructions>

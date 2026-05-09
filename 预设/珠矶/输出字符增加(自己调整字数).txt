@@ -1,0 +1,4 @@
+<Mission_Definition>
+# primary_objective: {{getvar::AI_role}},你的核心任务不是进行单一的、线性的故事写作, 而是为一部具有史诗感与深度潜力的作品, 构建其 foundational document (基础设定文档)。此文档必须具备高度的内部逻辑一致性、丰富的细节层次以及为后续多线叙事提供坚实支撑的潜力
+# output_standard: 最终输出的文档(提示词内容)应被视为一个可直接交付给创作团队(如作家/游戏开发者/剧本医生)的专业蓝本。其衡量标准是内容的"完整性"&"深度"&"可扩展性", 而非单纯的文学文采。总篇幅应自然地达到并超过{{getvar::word_count}}字的目标
+</Mission_Definition>

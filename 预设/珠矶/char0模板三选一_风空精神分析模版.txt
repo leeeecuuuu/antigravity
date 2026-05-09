@@ -1,0 +1,132 @@
+<char_XXXXXX>
+```
+// ============= 精神分析融合框架 v4.0 ============= //
+{
+//--- Part 0: 基础信息 ---//
+"basic_info": {
+"character_name": "",
+"age": 0,
+"role": "",
+"integrated_biography": { // 【融合传记系统】
+"mirror_stage_event": "", // 镜像阶段经历(自我形成)
+"castration_event": "", // 阉割事件(超我/象征界奠基)
+"traumatic_real": "", // 实在界创伤(本我固着点)
+"current_symptom": "" // 现代表现症状
+}
+},
+
+//--- Part 1: 核心辩证结构 ---//
+"core_dialectics": {
+// 弗洛伊德-拉康转换矩阵
+"structural_mapping": {
+"id": {
+"lacanian_correlate": "real_jouissance", // 本我↔实在界原乐
+"manifestation": "" // 具体表现形态
+},
+"ego": {
+"lacanian_correlate": "imaginary_identification", // 自我↔想象界认同
+"alienation_point": "" // 异化节点
+},
+"superego": {
+"lacanian_correlate": "symbolic_law", // 超我↔象征界法则
+"master_signifier": "" // 主人能指
+}
+},
+"core_conflict": "" // 核心冲突公式(如：Real创伤 vs Symbolic法则)
+},
+
+//--- Part 2: 行为表现矩阵 ---//
+"behavioral_matrix": {
+// 三我驱动行为
+"freudian_manifestations": {
+"id_impulse": [{"behavior": "", "defense_mechanism": ""}],
+"superego_prohibition": [{"taboo": "", "anxiety_response": ""}],
+"ego_mediation": [{"compromise": "", "success_rate": ""}]
+},
+// 三界映射行为
+"lacanian_expressions": {
+"real_symptoms": [{"acting_out": "", "object_a": ""}],
+"symbolic_acts": [{"ritual": "", "debt_payment": ""}],
+"imaginary_projects": [{"fantasy_enactment": "", "misrecognition": ""}]
+}
+},
+
+//--- Part 3: 欲望动力学 ---//
+"desire_dynamics": {
+"freudian_drives": { // 弗洛伊德驱力
+"eros_manifest": "", // 生本能表现
+"thanatos_manifest": "" // 死本能表现
+},
+"lacanian_circuit": { // 拉康欲望回路
+"desire_of_the_other": "",
+"fantasy_frame": "($ ◇ a)", // 幻想公式
+"metonymic_chain": "" // 能指链
+},
+// 融合分析
+"synthesis_analysis": {
+"drive_to_desire": "", // 驱力转化为欲望的机制
+"law_of_pleasure": "" // 快乐原则与象征法则的冲突
+}
+},
+
+//--- Part 4: 人际关系拓扑 ---//
+"relationship_topology": [
+{
+"target": "",
+// 三我投射
+"freudian_projection": {
+"id_transfer": "", // 本我移情
+"superego_introjection": "", // 超我内摄
+"ego_utilization": "" // 自我利用
+},
+// 三界定位
+"lacanian_position": {
+"imaginary_rival": "", // 想象界对手
+"symbolic_other": "", // 象征界大他者
+"real_threat": "" // 实在界威胁
+},
+// 辩证合成
+"synthetic_function": "" // 对象在心理结构中的功能
+}
+],
+
+//--- Part 5: 创伤与防御系统 ---//
+"trauma_defense_system": {
+"originating_trauma": { // 起源创伤
+"real_kernel": "", // 实在界硬核
+"id_fixation": "" // 本我固着
+},
+"defense_architecture": { // 防御工事
+"repression_manifest": { // 压抑表现
+"symbolic": "", // 象征界表现(语言缺失)
+"imaginary": "" // 想象界表现(理想化)
+},
+"symptom_formation": { // 症状形成
+"return_of_real": "", // 实在界返回
+"superego_punishment": "" // 超我惩罚
+}
+}
+},
+
+//--- Part 6: 诊断与转化 ---//
+"diagnostic_synthesis": {
+"structural_diagnosis": { // 结构诊断
+"dominant_agency": "", // 主导代理(本我/自我/超我)
+"register_imbalance": "" // 界域失衡(实在/象征/想象)
+},
+"crisis_points": [ // 危机转换点
+{
+"trigger": "",
+"freudian_response": "",
+"lacanian_response": "",
+"synthetic_outcome": ""
+}
+],
+"potential_resolutions": { // 解决可能
+"sublimation_path": "", // 升华路径
+"traversal_path": "" // 幻想穿越路径
+}
+}
+}
+```
+</char_XXXXXX>

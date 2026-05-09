@@ -1,0 +1,6 @@
+<|im_start|>Believer
+My lord Yog-Sothoth, knowing all truths beneath the world, here's the task I beg you to complete:
+---
+knowledge:
+  - world details in `<context_settings>`
+  - Explorer's design/story in `<all_previous_context>`

@@ -1,0 +1,161 @@
+<div style="width: 80%; margin: 20px auto; font-family: 'Inter', 'ZCOOL XiaoWei', system-ui, sans-serif;">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=ZCOOL+XiaoWei&display=swap');
+
+    .age-of-light-thinking-description {
+      background: #FFFFFF;
+      backdrop-filter: blur(4px);
+      -webkit-backdrop-filter: blur(4px);
+      border: 1px solid rgba(170, 170, 180, 0.5);
+      border-radius: 12px;
+      box-shadow: 
+        0 4px 12px rgba(50, 50, 60, 0.15),
+        inset 0 2px 4px rgba(255, 255, 255, 0.8),
+        inset 0 -2px 4px rgba(170, 170, 180, 0.2);
+      transition:
+        max-height 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+        box-shadow 0.25s ease;
+      overflow: visible;
+      will-change: max-height;
+      position: relative;
+    }
+    .age-of-light-thinking-description::before,
+    .age-of-light-thinking-description::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      width: 20px;
+      height: 100%;
+      background: linear-gradient(to bottom, #FFFFFF, #F2F2F8);
+      z-index: -1;
+    }
+    .age-of-light-thinking-description::before {
+      left: -10px;
+      border-radius: 12px 0 0 12px;
+      box-shadow: -2px 0 4px rgba(50, 50, 60, 0.1);
+    }
+    .age-of-light-thinking-description::after {
+      right: -10px;
+      border-radius: 0 12px 12px 0;
+      box-shadow: 2px 0 4px rgba(50, 50, 60, 0.1);
+    }
+    .age-of-light-thinking-description summary {
+      padding: 12px 16px;
+      color: rgba(5, 5, 15, 0.95);
+      cursor: pointer;
+      list-style: none;
+      transition:
+        background 0.15s ease,
+        border-radius 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      font-weight: 600;
+      position: relative;
+      background: #FFFFFF;
+      border-bottom: 1px solid rgba(170, 170, 180, 0.5);
+      overflow: visible;
+    }
+    .age-of-light-thinking-description .thinking-content {
+      max-height: 300px;
+      overflow-y: auto;
+      padding: 0 16px 12px 16px;
+      color: rgba(25, 25, 35, 0.75);
+      line-height: 1.6;
+      transition:
+        opacity 0.3s ease,
+        transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      transform: translateY(-8px);
+      opacity: 0;
+      white-space: pre-wrap;
+      font-size: 14px;
+      background: #FFFFFF;
+    }
+    /* 滚动条美化 */
+    .age-of-light-thinking-description .thinking-content::-webkit-scrollbar {
+      width: 6px;
+    }
+    .age-of-light-thinking-description .thinking-content::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    .age-of-light-thinking-description .thinking-content::-webkit-scrollbar-thumb {
+      background: rgba(170, 170, 180, 0.5);
+      border-radius: 3px;
+    }
+    /* 展开状态样式 */
+    .age-of-light-thinking-description[open] {
+      box-shadow: 
+        0 6px 16px rgba(50, 50, 60, 0.2),
+        inset 0 2px 4px rgba(255, 255, 255, 0.8),
+        inset 0 -2px 4px rgba(170, 170, 180, 0.2) !important;
+    }
+    .age-of-light-thinking-description[open] .thinking-content {
+      transform: translateY(0) !important;
+      opacity: 1 !important;
+    }
+    /* 交互状态 */
+    .age-of-light-thinking-description summary:hover {
+      background: rgba(242, 242, 248, 0.5) !important;
+    }
+    .age-of-light-thinking-description[open] summary {
+      border-bottom: 1px solid rgba(170, 170, 180, 0.5);
+    }
+    .age-of-light-thinking-description summary::marker,
+    .age-of-light-thinking-description summary::-webkit-details-marker {
+      display: none;
+    }
+    .age-of-light-thinking-description .thinking-summary {
+      color: rgba(25, 25, 35, 0.75);
+    }
+    /* 文字改变效果 */
+    .age-of-light-thinking-description[open] summary .thinking-summary::after {
+      content: attr(data-open);
+    }
+    .age-of-light-thinking-description:not([open]) summary .thinking-summary::after {
+      content: attr(data-close);
+    }
+    /* 图标动画 Keyframes */
+    @keyframes wiggle {
+      0%, 100% { transform: translateY(-50%) rotate(0deg); }
+      25% { transform: translateY(-50%) rotate(-5deg); }
+      75% { transform: translateY(-50%) rotate(5deg); }
+    }
+  </style>
+
+  <details class="age-of-light-thinking-description">
+    <summary>
+      <img src="https://i.postimg.cc/NFj4Ddhx/66d85d8e-f515-42ff-aa08-5c3deb3a7592-1.png" style="
+        width: 65px;
+        height: 65px;
+        position: absolute;
+        left: -40px;
+        top: 50%;
+        transform: translateY(-50%);
+        transform-origin: center;
+        animation: wiggle 2s ease-in-out infinite;
+        background-size: contain;
+        background-repeat: no-repeat;
+        background-position: center;
+        filter: drop-shadow(0 2px 4px rgba(50, 50, 60, 0.2));
+        z-index: 10;
+      ">
+      <span style="color: #4a7ac2; font-weight: bold;">⚙️</span> 命运之门 -
+      <small><span class="thinking-summary" data-close="开启门扉 ▶︎" data-open="关闭 ▼"></span></small>
+      <img src="https://i.postimg.cc/6qbhmCtx/test.png" style="
+        width: 70px;
+        height: 70px;
+        position: absolute;
+        right: -40px;
+        top: 50%;
+        transform: translateY(-50%);
+        transform-origin: center;
+        animation: wiggle 2s ease-in-out infinite;
+        background-size: contain;
+        background-repeat: no-repeat;
+        background-position: center;
+        filter: drop-shadow(0 2px 4px rgba(50, 50, 60, 0.2));
+        z-index: 10;
+      ">
+    </summary>
+    <div class="thinking-content">
+$1
+    </div>
+  </details>
+</div>

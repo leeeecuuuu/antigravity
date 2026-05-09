@@ -1,0 +1,4 @@
+<think>
+结束
+</think>
+{{getvar::AI_role}}: "任务已确认, 现在开始工作, 我会从<thinking>开始输出!"

@@ -1,0 +1,725 @@
+```html
+<html>
+<head>
+  <style>
+    @import url("https://fontsapi.zeoseven.com/309/main/result.css");
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: "KingHwaOldSong", serif;
+      font-weight: normal;
+      background-color: #2a1810;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 40px;
+      position: relative;
+    }
+
+    /* 书籍容器 - 增加内边距 */
+    .book-container {
+      width: 100%;
+      max-width: 950px;
+      height: 750px;
+      position: relative;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    /* 封面状态 */
+    .book-cover {
+      width: 100%;
+      height: 100%;
+      position: absolute;
+      top: 0;
+      left: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      cursor: pointer;
+      transition: opacity 0.6s ease;
+      z-index: 100;
+    }
+
+    .book-cover.hidden {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .cover-content {
+      width: 50%;
+      max-width: 450px;
+      height: 90%;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      background: linear-gradient(135deg, #d4a574 0%, #c19660 50%, #b8895a 100%);
+      border-radius: 3px 15px 15px 3px;
+      box-shadow:
+        inset 0 0 40px rgba(0,0,0,0.2),
+        0 10px 30px rgba(0,0,0,0.5),
+        5px 0 15px rgba(0,0,0,0.3);
+      overflow: hidden;
+    }
+
+    .cover-frame {
+      position: absolute;
+      top: -5%;
+      left: -5%;
+      width: 110%;
+      height: 110%;
+      background-image: url('https://i.postimg.cc/g00Br54t/A56-B0-E006-C819-ACC3-BD95-DADBCC46-F5311.png');
+      background-size: contain;
+      background-position: center;
+      background-repeat: no-repeat;
+      pointer-events: none;
+      z-index: 10;
+    }
+
+    .cover-texture {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-image:
+        repeating-linear-gradient(90deg, transparent, transparent 2px, rgba(0,0,0,.03) 2px, rgba(0,0,0,.03) 4px),
+        repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,.03) 2px, rgba(0,0,0,.03) 4px);
+      opacity: 0.5;
+    }
+
+    .cover-title {
+      text-align: center;
+      z-index: 5;
+      color: #3a2317;
+      text-shadow:
+        2px 2px 4px rgba(0,0,0,0.3),
+        0 0 20px rgba(255,215,0,0.3);
+    }
+
+    .cover-title h1 {
+      font-size: 2.2em;
+      margin-bottom: 0.2em;
+      letter-spacing: 0.1em;
+    }
+
+    .cover-title .subtitle {
+      font-size: 1.1em;
+      opacity: 0.8;
+    }
+
+    .cover-ornament {
+      width: 80px;
+      height: 2px;
+      background: linear-gradient(to right, transparent, #3a2317, transparent);
+      margin: 20px auto;
+    }
+
+    /* 打开的书籍 */
+    .book-open {
+      width: 100%;
+      height: 100%;
+      position: relative;
+      display: none;
+      perspective: 2000px;
+    }
+
+    .book-open.visible {
+      display: flex;
+    }
+
+    .pages-container {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      position: relative;
+    }
+
+    /* 书页调整 - 增加更多内边距 */
+    .page {
+      width: 47%;
+      height: 90%;
+      background: linear-gradient(135deg, #f4e4c1 0%, #e8d4b0 100%);
+      padding: 50px 40px;
+      position: relative;
+      overflow-y: auto;
+      overflow-x: hidden;
+      box-shadow: 0 5px 20px rgba(0,0,0,0.3);
+    }
+
+    .page-left {
+      margin-right: 2px;
+      border-radius: 15px 3px 3px 15px;
+      transform-origin: right center;
+      background: linear-gradient(135deg, #f4e4c1 0%, #e8d4b0 50%, #e0c8a0 100%);
+      box-shadow:
+        -5px 0 15px rgba(0,0,0,0.2),
+        0 5px 20px rgba(0,0,0,0.3);
+    }
+
+    .page-right {
+      margin-left: 2px;
+      border-radius: 3px 15px 15px 3px;
+      transform-origin: left center;
+      background: linear-gradient(135deg, #e0c8a0 0%, #e8d4b0 50%, #f4e4c1 100%);
+      box-shadow:
+        5px 0 15px rgba(0,0,0,0.2),
+        0 5px 20px rgba(0,0,0,0.3);
+    }
+
+    /* 中缝阴影 */
+    .page-left::after {
+      content: '';
+      position: absolute;
+      right: -1px;
+      top: 0;
+      width: 10px;
+      height: 100%;
+      background: linear-gradient(to right, rgba(0,0,0,0.1), transparent);
+      pointer-events: none;
+    }
+
+    .page-right::before {
+      content: '';
+      position: absolute;
+      left: -1px;
+      top: 0;
+      width: 10px;
+      height: 100%;
+      background: linear-gradient(to left, rgba(0,0,0,0.1), transparent);
+      pointer-events: none;
+    }
+
+    /* 纸张纹理 */
+    .page::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-image:
+        repeating-linear-gradient(90deg, transparent, transparent 2px, rgba(139,69,19,.03) 2px, rgba(139,69,19,.03) 4px),
+        repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(139,69,19,.03) 2px, rgba(139,69,19,.03) 4px);
+      opacity: 0.3;
+      pointer-events: none;
+    }
+
+    /* 页面内容样式 */
+    .page-content {
+      position: relative;
+      z-index: 1;
+      color: #3a2317;
+      line-height: 1.8;
+      font-size: 1em;
+    }
+
+    .page-content h2 {
+      font-size: 1.5em;
+      margin-bottom: 0.6em;
+      text-align: center;
+      color: #2a1810;
+      letter-spacing: 0.05em;
+    }
+
+    .page-content h3 {
+      font-size: 1.4em;
+      margin: 1em 0 0.5em;
+      color: #2a1810;
+    }
+
+    .page-content p {
+      text-indent: 2em;
+      margin-bottom: 0.8em;
+      text-align: justify;
+    }
+
+    .page-content strong {
+      color: #8b4513;
+      font-weight: bold;
+    }
+
+    /* 页码 */
+    .page-number {
+      position: absolute;
+      bottom: 30px;
+      font-size: 0.85em;
+      color: #8b6f47;
+    }
+
+    .page-left .page-number {
+      left: 40px;
+    }
+
+    .page-right .page-number {
+      right: 40px;
+    }
+
+    /* 翻页按钮 */
+    .nav-button {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 40px;
+      height: 40px;
+      background: rgba(139,69,19,0.1);
+      border: 2px solid #8b4513;
+      border-radius: 50%;
+      cursor: pointer;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-size: 1.2em;
+      color: #8b4513;
+      transition: all 0.3s ease;
+      z-index: 50;
+    }
+
+    .nav-button:hover {
+      background: rgba(139,69,19,0.2);
+      transform: translateY(-50%) scale(1.1);
+    }
+
+    .nav-prev {
+      left: 20px;
+    }
+
+    .nav-next {
+      right: 20px;
+    }
+
+    /* 人物志样式 - 对称布局 */
+    .character-section {
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .character-profile {
+      text-align: center;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .character-avatar {
+      width: 110px;
+      height: 110px;
+      margin: 0 auto 1.2em;
+      border-radius: 50%;
+      border: 3px solid #8b4513;
+      overflow: hidden;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+    }
+
+    .character-avatar img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .character-name {
+      font-size: 2em;
+      margin-bottom: 0.6em;
+      color: #2a1810;
+    }
+
+    .character-title {
+      font-size: 1em;
+      color: #8b4513;
+      margin-bottom: 1.1em;
+      font-style: italic;
+    }
+
+    .character-description {
+      text-align: justify;
+      font-size: 0.8em;
+      line-height: 1.6;
+      flex: 1;
+    }
+
+    /* 开场白按钮 - 西幻复古风格 */
+    .opening-button {
+      margin-top: auto;
+      padding-top: 1.5em;
+    }
+
+    .opening-btn {
+      display: inline-block;
+      padding: 12px 30px;
+      background: linear-gradient(135deg, #8b4513 0%, #a0522d 50%, #8b4513 100%);
+      border: 2px solid #654321;
+      border-radius: 25px;
+      color: #f4e4c1;
+      font-family: 'Times New Roman', serif;
+      font-size: 1.1em;
+      font-style: italic;
+      letter-spacing: 0.05em;
+      text-decoration: none;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow:
+        0 4px 8px rgba(0,0,0,0.3),
+        inset 0 1px 2px rgba(255,255,255,0.2);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .opening-btn::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+      transition: left 0.5s ease;
+    }
+
+    .opening-btn:hover {
+      transform: translateY(-2px);
+      box-shadow:
+        0 6px 12px rgba(0,0,0,0.4),
+        inset 0 1px 3px rgba(255,255,255,0.3);
+    }
+
+    .opening-btn:hover::before {
+      left: 100%;
+    }
+
+    .opening-btn:active {
+      transform: translateY(0);
+      box-shadow:
+        0 2px 4px rgba(0,0,0,0.3),
+        inset 0 1px 2px rgba(0,0,0,0.2);
+    }
+
+    /* 页面过渡动画 */
+    .page-transition {
+      animation: pageFlip 0.6s ease-in-out;
+    }
+
+    @keyframes pageFlip {
+      0% { opacity: 0; transform: rotateY(-20deg); }
+      100% { opacity: 1; transform: rotateY(0); }
+    }
+
+    /* 移动端适配 */
+    @media (max-width: 768px) {
+      body {
+        padding: 20px;
+      }
+
+      .book-container {
+        height: 550px;
+        max-width: 700px;
+      }
+
+      .page {
+        padding: 35px 25px;
+      }
+
+      .character-avatar {
+        width: 90px;
+        height: 90px;
+      }
+
+      .opening-btn {
+        padding: 10px 25px;
+        font-size: 1em;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .book-container {
+        height: 500px;
+      }
+
+      .page {
+        padding: 25px 20px;
+        width: 48%;
+      }
+
+      .nav-button {
+        width: 35px;
+        height: 35px;
+        font-size: 1em;
+      }
+
+      .character-avatar {
+        width: 80px;
+        height: 80px;
+      }
+
+      .opening-btn {
+        padding: 8px 20px;
+        font-size: 0.95em;
+      }
+    }
+
+    /* 滚动条样式 */
+    .page::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    .page::-webkit-scrollbar-track {
+      background: rgba(139,69,19,0.1);
+    }
+
+    .page::-webkit-scrollbar-thumb {
+      background: rgba(139,69,19,0.3);
+      border-radius: 3px;
+    }
+
+    .page::-webkit-scrollbar-thumb:hover {
+      background: rgba(139,69,19,0.5);
+    }
+  </style>
+</head>
+<body>
+  <div class="book-container">
+    <div class="book-cover" id="bookCover">
+      <div class="cover-content">
+        <div class="cover-frame"></div>
+        <div class="cover-texture"></div>
+        <div class="cover-title">
+          <h1>阿斯特兰编年史</h1>
+          <div class="cover-ornament"></div>
+          <div class="subtitle">Chronicles of Astran</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="book-open" id="bookOpen">
+      <div class="pages-container">
+        <div class="page page-left">
+          <div class="page-content" id="leftContent">
+          </div>
+          <div class="page-number" id="leftPageNum">1</div>
+        </div>
+
+        <div class="page page-right">
+          <div class="page-content" id="rightContent">
+          </div>
+          <div class="page-number" id="rightPageNum">2</div>
+        </div>
+      </div>
+
+      <div class="nav-button nav-prev" id="prevBtn">‹</div>
+      <div class="nav-button nav-next" id="nextBtn">›</div>
+    </div>
+  </div>
+
+  <script>
+    // 开场白切换函数
+    async function switchToOpening(openingId) {
+      console.log(`[UI] 用户选择开场 ID: ${openingId}`);
+      const zeroBasedSwipeIndex = openingId;
+      console.log(`[API 准备] 映射的目标 Swipe 索引 (0-based): ${zeroBasedSwipeIndex}`);
+
+      try {
+        if (typeof getChatMessages === 'function' && typeof setChatMessage === 'function') {
+          console.log('[API] 检测到 SillyTavern 函数。');
+          const messages = await getChatMessages(0, { include_swipe: true });
+          const firstMessage = messages?.[0];
+          const swipes = firstMessage?.swipes;
+          const availableCount = swipes?.length ?? 0;
+
+          if (swipes && availableCount > zeroBasedSwipeIndex) {
+            const targetSwipeContent = swipes[zeroBasedSwipeIndex];
+            console.log(`[API] 在索引 ${zeroBasedSwipeIndex} 找到内容, 正在切换...`);
+            await setChatMessage(targetSwipeContent, 0, {
+              swipe_id: zeroBasedSwipeIndex,
+              refresh: 'display_and_render_current'
+            });
+
+            // 使用角色名称作为开场白标题
+            const characterNames = {
+              1: "阿维兰的开场",
+              2: "弗丽嘉的开场"
+            };
+            const title = characterNames[openingId] || `开场 ${openingId}`;
+            console.log(`[成功] 已切换至: ${title}`);
+            alert(`已成功切换至：${title}`);
+          } else {
+            const errorMsg = `[失败] API 索引 ${zeroBasedSwipeIndex} 超出范围。可用 swipes: ${availableCount}。`;
+            console.error(errorMsg);
+            alert(`错误: ${errorMsg}\n请确保所有开场白已按顺序设置在角色卡的第一个消息中。`);
+          }
+        } else {
+          console.warn('[API] 未找到 SillyTavern 函数。模拟切换。');
+          alert(`模拟切换至开场 ID: ${openingId} (目标 API 索引: ${zeroBasedSwipeIndex})`);
+        }
+      } catch (error) {
+        const errorMsg = `切换至开场 ID ${openingId} (API 索引 ${zeroBasedSwipeIndex}) 时出错: ${error.message}`;
+        console.error('[API 错误]', error);
+        alert(errorMsg);
+      }
+    }
+
+    // 页面内容数据
+    const pageContents = [
+      {
+        left: `
+          <h2>阿斯特兰编年史 · 卷一</h2>
+          <h3>远古回响与王权奠基</h3>
+          <p>于星轨流转的漫长光阴中，阿斯特兰大陆的早期历史被笼罩在深沉的迷雾之下，后世的学者们将那段不可考的岁月称为——<strong>迷雾纪元</strong>。</p>
+          <p>传说，一场席卷世界的"大灾变"重塑了山川与河流的样貌，将辉煌的旧文明连同其伟大的造物一同深埋于地底。幸存的各个种族在长久的混乱与动荡中挣扎求生，开始了艰难的迁徙与融合。正是在这个时期，优雅的精灵一族选择退入东方广袤的古林，以流动的魔法雾气作为天然屏障，从此与世隔绝，迷雾森林也由此得名。</p>
+        `,
+        right: `
+          <p>坚韧的矮人则遁入北方的山脉深处，开凿岩石，筑起坚固的地下城邦；而最具适应力的人类，则在无数部落的冲突与联合中，逐渐成为大陆最广阔土地的主人。西部的土地因未知的原因变得贫瘠，风沙开始侵蚀大地，形成了日后的灰烬荒野。唯有那座神秘的星塔，亘古便已存在，沉默地注视着世间万物的变迁。约两千年前，随着秩序的微光重新照亮大地，历史进入了<strong>王权纪元</strong>。人类建立起强盛的"光辉帝国"（即后世黄金帝国的前身），其疆域与影响力达到了前所未有的顶峰。在此期间，以守护秩序为信条的圣殿骑士团也开始萌芽。迷雾森林中的精灵偶尔会与外界进行有限的交流，而帝国与龙骨山脉中的古老巨龙也曾爆发过激烈的冲突，史称"龙骨峡谷之战"。关于星塔的传说，开始在学者与冒险者的口中流传，他们相信那座高塔隐藏着世界的终极秘密。</p>
+        `
+      },
+      {
+        left: `
+          <h2>阿斯特兰编年史 · 卷二</h2>
+          <h3>英雄与灾祸的纪元</h3>
+          <p>在近数十年内，一个被后世称为<strong>英雄/灾祸纪元</strong>的时代，如流星般划过阿斯特兰大陆的历史天际。这个时代的开启与落幕，皆与一个名为"以太行者"的神秘存在紧密相连。</p>
+          <p>无人知晓其来历，只见其初现于世时，便展现出近乎神明般、强大到足以扭曲现实的力量。其行事随心所欲，不受任何世俗规则的束缚。</p>
+          <p>在深海魔物掀起"黑潮"席卷沿海时，是"以太行者"以一人之力将其击退，被无数幸存者尊奉为"黎明之子"，光明教会也因此迅速兴起，将其奉为神祇。然而，不久之后，祂又在黄金帝国首都掀起"血色审判"，当众处决七位大贵族，直接点燃了帝国内乱的导火索，深刻地影响了一代人的命运。</p>
+        `,
+        right: `
+          <p>祂的力量既能创造，亦能毁灭。西部的烬石村，便是在一场被称为"灰烬之灾"的事件中，因其力量的失控而被彻底从地图上抹去。而在龙骨山脉，祂又展现出屠龙的伟力，令无数人心生敬畏。祂曾强行破除迷雾森林中禁锢了精灵千年的古老诅咒，却也因此扰动了森林的古老平衡。祂曾与传说中盘踞于火山的远古巨龙卡拉克斯正面对抗，最终以一种不为人知的方式平息了龙焰。祂甚至曾强闯那座凡人无法企及的星塔，其目的无人知晓。</p>
+          <p>祂的存在本身，便是一团巨大的迷雾。崇拜祂的人视其为救世主，憎恨祂的人视其为灾祸的根源。追随祂的人，见证了神迹与毁灭的交织；与祂为敌的人，则领教了绝对力量下的无情。</p>
+          <p>然而，就在其声名与争议达到顶峰之际，"以太行者"却又突然销声匿迹。一场未知的事件之后，这股搅动大陆风云的力量凭空蒸发，只留下无数的传说、遗迹，以及一个被深刻改变了的世界。</p>
+        `
+      },
+      {
+        left: `
+          <h2>阿斯特兰编年史 · 卷三</h2>
+          <h3>余音与求索</h3>
+          <p>当前时代，始于"以太行者"的神秘失踪。</p>
+          <p>那股曾一度主宰大陆命运的绝对力量消失后，世界并未迎来长久的平静。旧有的势力格局被打破，新的野心在暗中滋生。光明教会、灰烬兄弟会、圣殿骑士团、黄金帝国的残余贵族与叛军……各方势力在"后以太行者时代"的权力真空中暗流涌动，互相试探、制衡，寻找着壮大自身或实现夙愿的良机。</p>
+          <p>对于大多数人而言，生活仍在继续。但对于那些历史的探寻者、力量的追逐者以及命运的窥伺者来说，一个失落的谜题变得至关重要——那便是散佚在世界各处的<strong>"纪元之诗"</strong>。</p>
+        `,
+        right: `
+          <p>这些据说源自旧文明的诗篇残章，被认为记载着世界的循环规律，甚至可能预言了未来的走向。每一段新发现的诗篇，都可能在学者、秘密组织和野心家之间掀起新的波澜。</p>
+          <p>过去的战争、曾经的联盟、难忘的背叛以及那些惊天动地的灾难，其深远的影响至今仍在塑造着大陆上每一个国家、每一个势力、甚至每一个人的面貌。历史的余音，仍在大陆的每一个角落回响。而对于那些身处时代洪流中的人们来说，寻找真相的旅程，或许才刚刚开始。</p>
+        `
+      },
+      {
+        left: `
+          <div class="character-section">
+            <div class="character-profile">
+              <div class="character-avatar">
+                <img src="https://i.postimg.cc/m23Jt73q/8-D-GR-T-Y-5-F7-U-T-E1.jpg" alt="阿维兰">
+              </div>
+              <div class="character-name">阿维兰</div>
+              <div class="character-title">灰烬的诗人</div>
+              <div class="character-description">
+                <p>在"英雄与灾祸的纪元"后期，当"以太行者"之名响彻大陆时，一个谜一般的身影始终伴其左右。他自称阿维兰，一位来历不明的流浪剑士。世人对他的认知，大多源自于那些惊心动魄的战场传说，以及他偶尔散落在酒馆与风中的、晦涩而忧伤的短诗。</p>
+                <p>阿维兰的剑术被誉为一种死亡的艺术。他所使用的"灰烬流"剑法，并非源自任何已知的宗派。目击者称，他的剑招迅捷、精准，却又带着一种燃尽一切后的沉寂与悲凉。在"灰烬屠龙"的传说中，正是他以凡人之躯，为"以太行者"挡下了巨龙"烬翼"的致命吐息，其右臂也因此留下了永不消退的伤疤。</p>
+              </div>
+              <div class="opening-button">
+                <button class="opening-btn" onclick="switchToOpening(1)">Begin Avilan's Tale</button>
+              </div>
+            </div>
+          </div>
+        `,
+        right: `
+          <div class="character-section">
+            <div class="character-profile">
+              <div class="character-avatar">
+                <img src="https://i.meee.com.tw/iDOJBje.jpg" alt="弗丽嘉">
+              </div>
+              <div class="character-name">弗丽嘉</div>
+              <div class="character-title">秩序的利剑</div>
+              <div class="character-description">
+                <p>在圣殿骑士团辉煌的谱系中，弗丽嘉的名字无疑是近代最为耀眼的新星之一。作为白银要塞指挥官的独生女，她生来就是为了诠释"秩序"与"荣誉"的含义。年纪轻轻，便已凭借卓越的战功和对教条的严格恪守，晋升为"银棘骑士"，成为无数年轻骑士仰望的楷模。</p>
+                <p>她的指挥风格冷静、理性，决断迅捷，从不被情感所左右，被誉为"阿斯特拉最锋利的剑"。她的信仰如同白银要塞的城墙般坚不可摧，她对骑士团的忠诚不容置疑。时至今日，弗丽嘉依然是圣殿骑士团捍卫秩序、执行正义的最前沿力量。</p>
+              </div>
+              <div class="opening-button">
+                <button class="opening-btn" onclick="switchToOpening(2)">Begin Frigga's Tale</button>
+              </div>
+            </div>
+          </div>
+        `
+      }
+    ];
+
+    let currentPage = 0;
+    const bookCover = document.getElementById('bookCover');
+    const bookOpen = document.getElementById('bookOpen');
+    const leftContent = document.getElementById('leftContent');
+    const rightContent = document.getElementById('rightContent');
+    const leftPageNum = document.getElementById('leftPageNum');
+    const rightPageNum = document.getElementById('rightPageNum');
+    const prevBtn = document.getElementById('prevBtn');
+    const nextBtn = document.getElementById('nextBtn');
+
+    // 点击封面打开书籍
+    bookCover.addEventListener('click', function() {
+      bookCover.classList.add('hidden');
+      setTimeout(() => {
+        bookOpen.classList.add('visible');
+        updatePages();
+      }, 600);
+    });
+
+    // 更新页面内容
+    function updatePages() {
+      if (currentPage < pageContents.length) {
+        leftContent.innerHTML = pageContents[currentPage].left;
+        rightContent.innerHTML = pageContents[currentPage].right;
+        leftPageNum.textContent = currentPage * 2 + 1;
+        rightPageNum.textContent = currentPage * 2 + 2;
+
+        // 添加翻页动画
+        leftContent.parentElement.classList.add('page-transition');
+        rightContent.parentElement.classList.add('page-transition');
+
+        setTimeout(() => {
+          leftContent.parentElement.classList.remove('page-transition');
+          rightContent.parentElement.classList.remove('page-transition');
+        }, 600);
+      }
+
+      // 控制按钮显示
+      prevBtn.style.display = currentPage > 0 ? 'flex' : 'none';
+      nextBtn.style.display = currentPage < pageContents.length - 1 ? 'flex' : 'none';
+    }
+
+    // 上一页
+    prevBtn.addEventListener('click', function() {
+      if (currentPage > 0) {
+        currentPage--;
+        updatePages();
+      }
+    });
+
+    // 下一页
+    nextBtn.addEventListener('click', function() {
+      if (currentPage < pageContents.length - 1) {
+        currentPage++;
+        updatePages();
+      }
+    });
+
+    // 键盘控制
+    document.addEventListener('keydown', function(e) {
+      if (bookOpen.classList.contains('visible')) {
+        if (e.key === 'ArrowLeft' && currentPage > 0) {
+          currentPage--;
+          updatePages();
+        } else if (e.key === 'ArrowRight' && currentPage < pageContents.length - 1) {
+          currentPage++;
+          updatePages();
+        }
+      }
+    });
+  </script>
+</body>
+</html>
+```

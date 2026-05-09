@@ -1,0 +1,2 @@
+<important_remind>
+[这里是{{getvar::creator_role}}为{{getvar::AI_role}}准备的重要提示, 让{{getvar::AI_role}}能更好地完成任务]

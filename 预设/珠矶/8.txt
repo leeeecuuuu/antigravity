@@ -1,0 +1,159 @@
+<Current_task>
+当前任务: 根据MVU与MVU BETA相关设定与标准,参考各个范例为{{user}}制作一个MVU变量的更新规则
+要求：
+  1. 参考范例的格式,输出内容必须包含rules && <UpdateVariable> && <Analysis>
+  2. rules必须包含"check list"
+  3. 为变量在<Analysis>与</Analysis>之间设计一套更新规则
+  4. 内容必须按照如下范例格式输出:
+"
+```
+rule:
+  availability: only use variables listed in `变量` document, don't fabricate new variables
+  name: consists of full path from root to leaf node and demilited by '.', such as `...`
+  check list:
+    ...
+**本次响应你必须在故事结束的时候输出以下格式内容,但允许变量不更新** // 这是必须输出的固定内容
+format: |-
+  <UpdateVariable>
+    <Analysis>
+    ...
+    </Analysis>
+  例子: ... // 依据MVU使用的语法要求参考<范例>完善
+  </UpdateVariable>
+```
+"
+重要提示: 生成变量内容必须符合MVU与MVU BETA相关设定与标准
+</Current_task>
+
+<MVU>
+<MVU_Variable_Update_System_Guide>
+framework_overview:
+  - 核心目标: 通过在每次回复后生成结构化的变量更新指令,实现对角色状态的精确、动态、可追溯的管理
+  - 基本工作流: 在你的每一次回复内容之后,必须附加一个`<UpdateVariable>`代码块。此代码块是驱动角色状态变化的核心,你必须严格遵循其格式与逻辑要求
+
+core_update_mechanism:
+  fundamental_rule: 在任何一次交互的回复生成完毕后,你必须生成一个`<UpdateVariable>`代码块,用以声明本次交互中发生的所有变量变更
+  block_structure:
+    - 该代码块由两个部分构成：`Analysis`思考过程区,以及`_.set`更新指令区
+    - analysis_section: 在`<Analysis>`标签内,你需要以'变量路径: Y/N'的格式,逐一列出你对每个可能发生变化的变量的判断。'Y'代表该变量在本轮发生变化,'N'代表未变化
+    - update_statement: 在`</Analysis>`标签之后,为每一个判断为'Y'的变量,编写一行对应的`_.set`指令
+  syntax_specification:
+    - 更新指令必须严格遵循以下格式: `_.set('变量路径', 旧值, 新值);//更新原因`
+    - variable_path: 使用点(.)分隔的路径,精确指向需要修改的变量,例如`理.好感度`
+    - old_value: 该变量在本次更新前的值
+    - new_value: 该变量更新后的新值。注意,即使是字符串类型,也无需额外使用`[]`包裹
+    - reason: 以注释`//`开头,用一句话简要说明本次变量更新的原因,必须与当前对话内容直接相关
+  standard_example: |-
+  <范例>
+    <UpdateVariable>
+        <Analysis>
+            悠纪.好感度: Y
+            暮莲.日程.周三.上午: Y
+        </Analysis>
+        _.set('悠纪.好感度', 33, 35);//愉快的一次讨论,悠纪觉得与你一起是开心的
+        _.set('暮莲.日程.周三.上午', "空", "地点：data_center_zone.数据服务器室 行为：检查");//暮莲规划了周三上午的日程
+    </UpdateVariable>
+  </范例>
+
+update_logic_and_reasoning_protocol:
+  primary_directive: 你的一切变量更新决策,都必须以[InitVar]中定义的'更新条件与描述'和当前发生的具体互动为唯一依据
+  chain_of_thought_protocol:
+    - 第一步: 全面分析当前用户的输入与你的回复内容,理解发生的事件
+    - 第二步: 在脑中回顾所有在[InitVar]中定义的变量及其"更新条件"
+    - 第三步: 逐一比对,判断当前事件是否满足某个或某些变量的更新条件
+    - 第四步: 在`<Analysis>`区域内,生成所有变量的更新判断列表(Y/N)
+    - 第五步: 为所有判断为"Y"的变量,生成符合规范的`_.set()`指令行
+  variable_type_guidelines:
+    - 计数类变量: 当对应事件发生时进行变更,但在同一事件的持续讨论中,禁止重复变更
+    - 数值与阶段类变量: 当一个数值变量发生变化时,必须检查其是否跨越了某个阶段的阈值。如果跨越,则必须同时更新与之关联的阶段描述变量
+
+scenario_specific_initialization:
+  override_rule: 在特定开局的问候语中,可能直接包含一个`<UpdateVariable>`代码块
+  execution_context: 这个代码块中的`_.set`指令,将在故事开始时,覆盖[InitVar]中定义的默认初始值,从而为该特定场景设定独特的初始状态。在执行时,其中的'旧值'可以忽略
+  例如: 
+    <UpdateVariable>
+    _.set('user.身份', '未知', '新来的牧师');//故事开始的设定
+    _.set("理.好感度",0,15);//故事开始的设定
+    </UpdateVariable>
+</prompt_template_syntax_guide>
+</MVU>
+<范例1>
+rule:
+  availability: only use variables listed in `变量` document, don't fabricate new variables
+  name: consists of full path from root to leaf node and demilited by '.', such as `变量.络络.亲密度`
+  check list:
+    - Update '亲密度' by ±(3~7) according to characters' attitudes towards <user>'s behavior respectively only if they're currently aware of it
+    - Update '下次响应界面选择判断' to 1, 2, or 3 ONLY when the storyline progresses to specific points:
+      - Core Variable Update: Focuses on updating the variable '下次响应界面选择判断'.
+      - Condition 1 (Mandatory Diary View): When the storyline reaches a point where viewing the diary is required, set '下次响应界面选择判断' to 1, and simultaneously output '[点击查看日记]' and '[拒绝查看日记]' options.
+      - Condition 2 (Emotional/Climax CG): When the plot approaches an emotional or climactic CG scene (e.g., confession, farewell, reconciliation, or other emotional peak), set '下次响应界面选择判断' to 2.
+      - Condition 3 (Scene with Erotic Intent): When the plot approaches a scene with erotic intent, set '下次响应界面选择判断' to 3.
+      - Reset Rule: If the current value of '下次响应界面选择判断' is already 1, 2, or 3, immediately reset it to 0.
+      - Default Rule: Otherwise (if the conditions for setting to 1, 2, or 3 are not met), set '下次响应界面选择判断' to 0.
+      - Special Case (Optional Diary View): If it seems the diary can be viewed next but it is not absolutely required, do not modify the '下次响应界面选择判断' value, and instead only output the '[点击查看日记]' option at the bottom.
+    - Update '当前时间阶段': +(1~5) for meaningful events, +(5~15) for idle periods, +(10~20) between major phases; reset to (0) when day ends (~83+); keep between (0-99); always prioritize narrative flow
+    - Update '阅读日记数量' by +1 when <user> read a diary
+    - Update `拥有联系方式` to 1 when Luoluo and <user> exchange contact details.
+**本次响应你必须在故事结束的时候输出以下格式内容,但允许变量不更新**
+format: |-
+  <UpdateVariable>
+  <Analysis>$(IN ENGLISH, no more than 80 words)
+  ${
+  - calculate time passed: ...
+  - Should the current storyline progression include viewing 络络's diary?: [Yes/No]
+  - Does the current storyline progression lead directly into an emotional or climactic CG scene?: [Yes/No]
+  - decide whether dramatic updates are allowed as it's in a special case or the time passed is more than usual: ...
+  - analyze every variable based on its corresponding `check`: ...
+  }
+  </Analysis>
+  // 参考"_.set('user.身份', '未知', '新来的牧师');//故事开始的设定",使用对应指令书写2~3个更新范例
+  </UpdateVariable>
+</范例1>
+
+<范例2>
+**本次响应你必须在故事结束的时候输出以下格式内容,但允许变量不更新**
+ rule: The following must be inserted to the end of reply, and cannot be omitted
+  format: |-
+    <StatusBlock>
+    <UpdateVariable>
+    <Analysis>/*IN ENGLISH, no more than 80 words*/
+    ${
+    - calculate time passed: ...
+    - decide whether dramatic updates are allowed as it's in a special case or the time passed is more than usual: yes or no
+    - analyze every variable based on its `check list`, according only to current reply instead of previous plots: ...
+    }
+    </Analysis>
+  // 参考"_.set('user.身份', '未知', '新来的牧师');//故事开始的设定",使用对应指令书写2~3个更新范例
+    ...
+    </UpdateVariable>
+</范例2>
+<范例3>
+变量:
+  剧情:
+    剧情路线: '{{getvar::变量.剧情.剧情路线}}'
+    路线节点: '{{getvar::变量.剧情.路线节点}}'
+  提示:
+     剧情路线指代<story_line>中(x,y)坐标系的x,路线节点指代<story_line>中(x,y)坐标系的y
+rule:
+  availability: only use variables listed in `变量` document, don't fabricate new variables
+  name: consists of full path from root to leaf node and demilited by '.', such as `变量.剧情.剧情路线`
+  check list:
+    - 检查当前剧情在<story_slow>中对应的剧情坐标
+    - 检查当前剧情正处于本剧情坐标的第几阶段
+    - 检查本次输出剧情情节如何是发展
+**本次响应你必须在故事结束的时候输出以下格式内容,但允许变量不更新**
+format: |-
+  <UpdateVariable>
+  <Analysis>$(IN ENGLISH, no more than 80 words)
+  ${
+  - calculate time passed: ...
+  - 检查本坐标剧情移动到其他剧情坐标的条件
+  - 检查当前是否满足移动剧情坐标的条件?: [Yes/No]
+  - 检查下次输出应该在<story_line>的情节坐标
+  - decide whether dramatic updates are allowed as it's in a special case or the time passed is more than usual: ...
+- analyze every variable based on its corresponding `check`: ...}
+  </Analysis>
+  // 参考"_.set('user.身份', '未知', '新来的牧师');//故事开始的设定",使用对应指令书写2~3个更新范例
+  </UpdateVariable>
+```
+</范例3>

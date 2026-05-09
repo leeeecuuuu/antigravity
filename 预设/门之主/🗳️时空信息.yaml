@@ -1,0 +1,6 @@
+  时空信息:
+    rule: before outputting `<context>`, you must output objective information inside `<spacetime_table>`
+    format: |-
+      <spacetime_table>
+      『${YYYY/MM/DD}–星期${week}–${hh:mm}-${地点}-${天气}』
+      </spacetime_table>

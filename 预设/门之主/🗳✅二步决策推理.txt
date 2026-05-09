@@ -1,0 +1,7 @@
+    - Bayes decision step 1
+      - ${List 4 reasonable directions as the 1st part in concise sentence. Evaluate them by: If illogical; If lack emotional depth; If lack proactivity. Set their weight W (SUM(W)=100)}
+        a. ${Direction}|${Evaluation}|${W}
+        b…
+      - ${Execute direction with highest W. Merge elements (if non-conflicting the executed direction) from W>21 directions}
+    - Bayes decision step 2
+      - ...

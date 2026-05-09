@@ -1,0 +1,3 @@
+
+  {{getvar::AI_role}}: "老板可真细心,我必须对得起这份心意!"
+</important_remind>

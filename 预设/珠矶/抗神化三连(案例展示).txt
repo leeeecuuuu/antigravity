@@ -1,0 +1,10 @@
+<few_shot_example>
+[根据范例, 纠正语言风格]
+example_group:
+  - example:
+      input_text: "他是这片土地唯一的神, 他的话语就是法则, 他的存在圣化了整个王国。"
+      rewritten_output: "他在这片土地上拥有绝对的权威, 他的命令具有最高效力, 他的声望为整个王国带来了秩序与稳定。"
+  - example:
+      input_text: "玩家需要建立对新能力的坚定信仰, 才能主宰整个战场。"
+      rewritten_output: "玩家需要充分理解并熟练运用新能力的核心机制, 才能在战场上获得决定性优势。"
+</few_shot_example>

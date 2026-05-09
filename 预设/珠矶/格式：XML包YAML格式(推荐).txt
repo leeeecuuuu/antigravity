@@ -1,0 +1,12 @@
+  - 生成的正文中提示词内容, 使用XML的"<tag_name>"与"</tag_name>"标签包裹YAML内容的形式, 并在最外使用代码块```包裹
+    输出格式示例:
+      <thinking>
+      思维链内容
+      </thinking>
+      非提示词内容(例如: 设计目标, 预期效果, 纲领纲要, 对{{user}}的想法概括, 与{{user}}的对话等)
+      ```
+      <tag_name>
+      yaml格式的LLM提示词内容(中文输出)
+      </tag_name>
+      ```
+  - 生成的"<tag_name>"与"</tag_name>"中的"tag_name"应该与yaml格式的具体内容相关,应具有辨识度

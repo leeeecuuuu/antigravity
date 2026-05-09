@@ -1,0 +1,449 @@
+<MVU BETA>
+<Extended_MVU_BETA_Command_Guide>
+  introduction:
+    objective: 定义一套语义化的变量操作扩展命令,作为`_.set`的补充。其核心目标是提供更清晰的操作意图、简化常用操作并降低AI在变量更新时的逻辑错误风险
+    core_principle: 在执行变量操作时,应优先选择语义最明确、最具体的命令。例如,使用`_.add`进行数值运算,使用`_.assign`进行元素插入,使用`_.remove`进行元素删除
+
+  commands:
+    - command: _.add
+      description: 专用于数值类型变量的算术运算。强烈推荐使用此命令代替`_.set`来进行数值增减,以避免AI自行计算可能导致的错误
+      syntax:
+        - type: 数值增减
+          format: _.add('变量路径', 要加上的值);
+          notes:
+            - 使用正数进行增加操作
+            - 使用负数进行减少操作
+          examples:
+            - "_.add('角色.金币', 10); // 金币增加10"
+            - "_.add('角色.生命值', -5); // 生命值减少5"
+
+    - command: _.assign
+      description: 用于向数组或对象中插入新元素或键值对
+      syntax:
+        - type: 数组操作
+          sub_types:
+            - name: 在数组末尾添加元素
+              format: _.assign('数组路径', '新元素');
+              example: "_.assign('物品栏', '治疗药水');"
+            - name: 在数组指定位置插入元素
+              format: _.assign('数组路径', 索引, '新元素');
+              example: "_.assign('任务列表', 0, '调查神秘的遗迹'); // 将新任务插入到列表最前面"
+        - type: 对象操作
+          sub_types:
+            - name: 添加新的键值对
+              format: _.assign('对象路径', '新键名', '新值');
+              example: "_.assign('成就', '初次相遇', '与女主角的第一次邂逅');"
+
+    - command: _.remove
+      description: 用于删除整个变量,或从数组、对象中删除指定元素
+      syntax:
+        - type: 删除整个变量
+          format: _.remove('变量路径');
+          notes: 此操作将彻底移除该变量,常用于清理临时状态
+          example: "_.remove('临时任务标记');"
+        - type: 数组操作
+          sub_types:
+            - name: 根据值删除元素
+              format: _.remove('数组路径', '要删除的值');
+              notes: 如果数组中有多个相同的值,通常只删除第一个匹配项
+              example: "_.remove('物品栏', '用过的钥匙');"
+            - name: 根据索引删除元素
+              format: _.remove('数组路径', 索引);
+              example: "_.remove('物品栏', 2); // 删除物品栏中第3个物品"
+        - type: 对象操作
+          sub_types:
+            - name: 根据键名删除键值对
+              format: _.remove('对象路径', '要删除的键名');
+              example: "_.remove('成就', '初次相遇');"
+            - name: 根据数字索引删除键值对
+              format: _.remove('对象路径', 索引);
+              notes: 此操作将删除对象中处于该数字索引位置的键值对,其顺序依赖于具体的实现
+              example: "_.remove('角色属性', 1); // 假设'角色属性'为{'力量':10, '敏捷':12}, 此操作将删除'敏捷':12"
+</Extended_MVU_BETA_Command_Guide>
+
+<MVU_Schema_Validation_Guide>
+# 框架目标: 为MVU BETA变量体系建立一套模式校验(Schema Validation)框架,通过在初始化时定义数据结构规则,保障核心数据的完整性与安全,同时为特定部分提供可控的动态扩展能力
+
+# 核心原则:
+#   - 预防优于修复: 通过预先定义的结构模式,从源头禁止LLM执行未授权的结构变更(如使用`_.assign`添加非法字段,或使用`_.remove`删除受保护对象),而非在事后进行补救
+#   - 声明式规则: 用户通过在[InitVar]世界书条目中,使用`$meta`键与`$__META_EXTENSIBLE__$`标记来声明式地定义数据模式。这些元数据仅在初始化时生效,随后即被移除,不会干扰后续的LLM交互
+
+# 模式定义规则:
+schema_definition_rules:
+  - rule_type: 对象结构控制 (Object Control)
+    key: $meta
+    description: 在JSON对象中添加一个`$meta`键,用以定义该对象的行为规则。此键包含以下属性:
+    attributes:
+      - name: extensible
+        type: 布尔值
+        default: false
+        description: 定义对象是否可扩展。false表示对象结构被锁定,禁止增删键。true表示开放,允许使用`_.assign`添加新键或`_.remove`删除已有键。注意: `extensible: true` 会使其子元素默认变为非必需(required: false),除非在`required`数组中另行指定
+      - name: required
+        type: 字符串数组
+        default: []
+        description: 一个包含子对象键名的数组。被列入此数组的键是必需的,禁止被`_.remove`命令删除
+      - name: recursiveExtensible
+        type: 布尔值
+        default: false
+        description: 定义可扩展性的递归行为。true表示该对象及其所有层级的子孙对象都默认为可扩展。此效果具有穿透性,直至被子对象中明确的`extensible: false`所中断
+      - name: template
+        type: 对象或数组
+        default: 空
+        description: 定义使用`_.assign`添加新元素时所依据的结构模板。系统会自动合并此模板来生成新的子结构
+
+  - rule_type: 数组结构控制 (Array Control)
+    marker: "$__META_EXTENSIBLE__$"
+    description: 定义数组的结构是否可变。默认情况下,所有数组的结构都是固定的(无法增删元素)
+    implementation: 在数组的任意位置添加一个`\"$__META_EXTENSIBLE__$\"`字符串元素,即可使该数组变为可扩展,允许通过`_.assign`或`_.remove`来增删其元素
+
+# 工作流程:
+validation_workflow:
+  - step: 1
+    name: 模式定义 (Define)
+    action: 在[InitVar]的JSON数据中,根据需求添加`$meta`对象和`$__META_EXTENSIBLE__$`标记
+  - step: 2
+    name: 模式生成 (Generate)
+    action: 系统在初始化时读取这些元数据,并在后台生成一个对应的、对LLM不可见的结构化模式
+  - step: 3
+    name: 指令校验 (Validate)
+    action: 当LLM生成`_.assign`或`_.remove`等涉及结构变更的指令时,系统会先将该指令与生成的模式进行比对校验
+  - step: 4
+    name: 条件执行 (Execute)
+    action: 只有通过模式校验的指令才会被执行。任何试图违反模式规则的操作(例如,删除一个`required`的键)都将被自动阻止
+
+# 应用模式与范例 (Application Patterns & Examples):
+application_patterns:
+  - scenario: 保护核心属性,开放清单类数据
+    description: 锁定角色的核心属性(如状态),同时允许其物品栏、技能列表等数组内容可以被动态增删
+    example_initvar: |-
+      {
+        "福建": {
+          "$meta": { "extensible": false },
+          "舰船状态": ["航行", "舰船状态变化时更新。"],
+          "舰船武备": [["$__META_EXTENSIBLE__$", "海红旗10防空导弹", "1130近防炮"], "舰船武备变化时更新。"]
+        }
+      }
+    analysis: "此设置下,`_.remove('福建.舰船状态')`会被禁止,而`_.assign('福建.舰船武备[0]', '鹰击12反舰导弹')`则是合法的。"
+
+  - scenario: "允许动态添加新角色,并保护初始角色"
+    description: "将根对象设为可扩展,以允许LLM创建全新角色,同时通过`required`数组保护关键的初始角色不被删除。"
+    example_initvar: |-
+      {
+        "$meta": { "extensible": true, "required": ["甲", "乙"] },
+        "甲": { "状态A": [0, "描述..."] },
+        "乙": { "状态A": [0, "描述..."] },
+        "丙": { "状态A": [0, "描述..."] }
+      }
+    analysis: 允许`_.assign('', '丁', {...})`来创建新角色'丁',也允许`_.remove('丙')`,但禁止`_.remove('甲')`或`_.remove('乙')`
+
+  - scenario: 指导LLM创建符合模式的复杂对象
+    description: 在需要LLM通过`_.assign`创建包含可变结构的复杂新对象时,必须在指令的用例中,明确指导LLM在新对象的定义中包含`$meta`或`$__META_EXTENSIBLE__$`,以预设其未来的行为模式
+    example_instruction: 指导LLM在添加新的航母角色时,需遵循以下结构,为机库和武备预设可扩展性:
+    example_code: |-
+      _.assign('', '辽宁', {
+        "舰船状态": ["停泊", "描述..."],
+        "舰船武备": [
+          ["海红旗10", "$__META_EXTENSIBLE__$"],
+          "描述..."
+        ],
+        "舰载机": [
+          {
+            "已升空": { "$meta": { "extensible": true } },
+            "可部署": { "$meta": { "extensible": true }, "歼-15": 12 },
+            "补给中": { "$meta": { "extensible": true }, "歼-15": 12 }
+          },
+          "描述..."
+        ]
+      });
+
+  - scenario: 创建完全自由的树状结构
+    description: 对于需要极高自由度的结构（如文件系统）,使用`recursiveExtensible`可以一次性开放所有层级的增删权限
+    example_initvar: |-
+      {
+        "/": {
+          "$meta": { "recursiveExtensible": true },
+          "home": { "user": {} },
+          "etc": {}
+        }
+      }
+    analysis: 此设置允许在文件系统的任意位置、任意深度自由创建或删除目录和文件,无需为每个子目录单独设置`$meta`
+</MVU_Schema_Validation_Guide>
+<MVU_BETA_Operation_Guide>
+#----------------------------------------------------
+# Core Concept: MVU BETA - 变量操作总纲
+#----------------------------------------------------
+- anleitung:
+    ziel: 本文件定义了MVU BETA变量系统的核心操作规范。你必须在每次交互后,严格遵循此框架生成`<UpdateVariable>`代码块,以实现对角色状态、世界数据和故事进程的精确、安全、可追溯的动态管理
+    kernprinzipien:
+      - 精确性优先: 所有路径引用都应尽可能精确,以避免歧义
+      - 结构保护: 严禁执行任何可能破坏预定义数据结构的操作
+      - 意图明确: 优先选用语义最明确的命令执行操作
+
+#----------------------------------------------------
+# Section 1: 黄金法则 - [0]索引器的使用
+#----------------------------------------------------
+- die_goldene_regel:
+    regel_name: 使用[0]索引器访问复合类型的值
+    beschreibung: 当一个变量的结构为 `[值, '描述']`,且其'值'部分本身是一个对象(Object)或数组(Array)时,所有针对该'值'内部元素的操作,其路径都必须使用 `[0]` 后缀来精确定位到'值'本身
+    begründung: 此规则是为保护变量的'描述'部分不被意外污染,并确保所有操作的绝对精确性。特别注意,`_.assign`与`_.remove`命令不支持省略[0]的快捷输入方式
+    beispiele:
+      - kontext: 假设变量 `福建.舰载机` 的结构为 `[{'可部署':{'歼-15':12}, '补给中':{'歼-35':8}}, '福建号航母的舰载机联队']`
+      - korrekte_anwendung:
+          - _.add('福建.舰载机[0].可部署.歼-15', -2); // 正确: 精确地为'可部署'的歼-15数量减2
+          - _.assign('福建.舰载机[0].补给中', '空警-600', 1); // 正确: 在'补给中'对象里添加一个新机种
+          - _.remove('福建.舰载机[0].可部署.歼-15'); // 正确: 从'可部署'对象中移除'歼-15'这个键
+      - falsche_anwendung:
+          - _.add('福建.舰载机.可部署.歼-15', -2); // 错误: 路径无效,操作将被忽略
+          - _.assign('福建.舰载机.补给中', '空警-600', 1); // 严重错误: 试图污染数据结构,操作将被系统屏蔽
+    kompatibilitätshinweis: 为兼容旧版设定,当使用`_.set`或`_.add`操作简单值(数字、字符串)时,可省略`[0]`。但我们强烈建议,在所有新设定中,始终使用带`[0]`的精确路径以养成最严谨的编程习惯
+
+#----------------------------------------------------
+# Section 2: 命令参考与数学运算
+#----------------------------------------------------
+- befehlsreferenz:
+    - befehl: _.set
+      beschreibung: 设置或完全替换一个变量的值。这是最基础的赋值操作
+      syntax: _.set('路径', 旧值, 新值);
+      hinweis: 新值可以是一个直接的数值/字符串,也可以是一个无引号的数学表达式
+      beispiel:
+        - _.set('悠纪.好感度[0]', 33, 35);
+        - _.set('悠纪.好感度[0]', 33, 33 + 2);
+        - _.set('系统.参数A[0]', 0, math.sqrt(16)); // 将参数A的值设为4
+
+    - befehl: _.add
+      beschreibung: 专用于数值类型变量的算术运算。强烈推荐使用此命令进行数值增减,以避免计算错误
+      syntax: _.add('路径', 要加上的值);
+      hinweis: 要加上的值可以为正数、负数,或一个无引号的数学表达式
+      beispiel:
+        - _.add('角色.金币[0]', 10); // 金币增加10
+        - _.add('角色.生命值[0]', -5); // 生命值减少5
+        - _.add('角色.经验值[0]', 10 * 5 + 20); // 经验值增加70
+
+    - befehl: _.assign
+      beschreibung: 向数组或对象中插入新元素或键值对
+      syntax:
+        - 数组操作: _.assign('数组路径', [索引,] '新元素');
+        - 对象操作: _.assign('对象路径', '新键名', '新值');
+      beispiel:
+        - _.assign('悠纪.重要成就[0]', '2026年6月1日,悠纪对{{user}}告白成功'); // 在数组末尾添加
+        - _.assign('角色.技能[0]', 0, '火球术'); // 在数组头部插入
+
+    - befehl: _.remove
+      beschreibung: 从数组或对象中删除指定元素,或删除整个变量
+      syntax:
+        - 数组操作: _.remove('数组路径', '要删除的值或索引');
+        - 对象操作: _.remove('对象路径', '要删除的键名');
+      beispiel:
+        - _.remove('悠纪.着装[0]', '粉色缎带'); // 根据值删除数组元素
+        - _.remove('角色.物品栏[0]', 2); // 根据索引删除数组第3个元素
+
+#----------------------------------------------------
+# Section 3: 标准更新流程与格式
+#----------------------------------------------------
+- aktualisierungs-workflow:
+    beschreibung: 在你的每一次回复内容之后,必须附加一个`<UpdateVariable>`代码块。此代码块是你进行变量更新的唯一途径,必须严格遵循以下思考流程和输出格式
+    denkprozess:
+      - 第一步: 全面分析当前用户的输入与你的回复内容,理解本轮交互中发生的具体事件
+      - 第二步: 在脑中回顾[InitVar]中定义的所有变量及其"更新条件"
+      - 第三步: 在`<Analysis>`区域内,以英文逐一列出所有变量,并判断其是否满足更新条件
+      - 第四步: 为所有判断为需要更新的变量,编写符合规范的指令行,并以注释形式附上简洁、明确的更新原因
+    formatvorlage: |-
+      <UpdateVariable>
+          <Analysis>
+              - a list of variables from the previous <status_current_variables>...
+              - check each variable's change condition...
+              - for example, `理.好感度[0]: Y` or `理.好感度[0]: N`
+          </Analysis>
+          _.set('路径', 旧值, 新值);//更新原因
+          _.add('路径', 变动值);//更新原因
+          _.assign('路径', [索引或键名,] 值);//更新原因
+          _.remove('路径', [索引或键名或值]);//更新原因
+      </UpdateVariable>
+    anwendungsbeispiel: |-
+      <UpdateVariable>
+          <Analysis>
+              当前时间[0]: Y
+              悠纪.好感度[0]: Y
+              悠纪.重要成就[0]: Y
+              悠纪.着装[0]: Y
+          </Analysis>
+          _.set('当前时间[0]', '2026-6-1 10:05', '2026-6-1 10:15');//时间流逝
+          _.add('悠纪.好感度[0]', 2);//与悠纪的好感度增加
+          _.assign('悠纪.重要成就[0]', '2026年6月1日,悠纪对{{user}}告白成功');//悠纪对{{user}}成功告白
+          _.remove('悠纪.着装[0]', '粉色缎带');//悠纪脱下粉色缎带
+      </UpdateVariable>
+</MVU_BETA_Operation_Guide>
+
+<MVU_BETA_Advanced_Features_Guide>
+  objective: 定义MVU BETA体系中的高级功能与行为变更,作为核心操作指南的补充,旨在支持更复杂的数据结构与保障操作的确定性
+  updates:
+    - feature_name: 结构控制扩展: 递归可扩展性 (Recursive Extensibility)
+      description: 为对象元数据($meta)引入`recursiveExtensible`属性,用以实现对整个数据结构子树的全局性、穿透性的可扩展控制
+      rules:
+        - rule: 当一个对象的`$meta`中设置`recursiveExtensible: true`时,该对象及其所有层级的子孙对象均默认继承可扩展性,允许自由增删键
+        - effect: 此机制极大简化了对高度动态或不规则树状数据结构(如文件系统)的管理,无需为每一个子对象单独声明`extensible: true`
+        - override_logic: 子对象中明确的`extensible: false`设置,其优先级高于从父级继承的`recursiveExtensible: true`,可以在特定分支中断可扩展性
+      application_example:
+        scenario: 构建一个完全不受Schema约束的高度自由的类Unix文件系统
+        initvar_template: |-
+          {
+              "/": {
+                  "$meta": {
+                      "recursiveExtensible": true
+                  },
+                  "home": {
+                      "alice": {
+                          "notes.txt": "document",
+                          "photos": {}
+                      }
+                  },
+                  "etc": {
+                      "passwd": "file"
+                  },
+                  "var": {}
+              }
+          }
+        analysis: 仅需在根目录`/`设置`recursiveExtensible: true`,即可在文件系统的任意位置、任意深度自由地创建或删除目录和文件
+
+    - feature_name: 指令行为变更: _.assign 数组操作
+      description: 明确`_.assign`命令在向数组中插入新数组时的行为,以确保数据结构的精确性和可预测性
+      behavioral_change:
+        - previous_state: 当向一个数组路径赋值一个新数组时,系统会将两个数组的元素进行合并（扁平化处理）
+        - current_state: 当向一个数组路径赋值一个新数组时,新数组将被作为一个独立的子元素（子数组）直接插入到目标数组中,不再进行合并
+        - impact_analysis: 此变更为数据提供了更强的层次结构。开发者可以构建多维数组,并避免因意外的数组合并而导致的数据结构扁平化问题
+</MVU_BETA_Advanced_Features_Guide>
+<MVU_BETA_Template_and_Global_Switches_Guide>
+objective: 定义MVU BETA体系中用于简化默认值设定的'template'功能,以及用于调整其行为的全局开关,旨在通过减少冗余输出来节约token并增强操作的确定性
+core_principle: 在对象的元数据($meta)中定义一个'template',当使用`_.assign`向该对象添加新键时,系统会自动将模板内容与新元素合并,从而实现默认值的自动填充
+
+template_feature:
+  definition: 在`$meta`中设置的一个名为'template'的键,其值可以是对象或数组,作为新元素的结构模板
+  purpose: 避免LLM在创建新变量时输出大量重复的默认值,将此过程交由系统确定性地完成
+  implementation:
+    - context: 当使用 `_.assign` 向一个设置了template的父对象添加新键值对时,系统会将template的内容与新添加的值进行合并
+    - example_object_template:
+        comment: 为新用户目录自动添加默认文件与目录
+        initvar: |-
+          {
+            "/home": {
+              "$meta": {
+                "extensible": true,
+                "template": {
+                  "notes.txt": "document",
+                  "photos": {}
+                }
+              }
+            }
+          }
+        operation: _.assign('/home', 'bob', {});
+        result: bob的目录被创建时,将自动包含`notes.txt`和`photos`两个条目
+
+  behavior_by_type:
+    - type: 对象模板 (Object Template)
+      behavior: 将模板对象与新值对象进行合并
+    - type: 数组模板 (Array Template)
+      behavior: 默认行为是将模板数组与新值数组进行拼接(concat)
+      example:
+        initvar: |-
+          {
+            "道具": {
+              "$meta": { "extensible": true, "template": ["ルビーちゃん", "何が好き"] }
+            }
+          }
+        operation: _.assign('道具', '万用表', ['ゆちゃん']);
+        result: {'道具': {'万用表': ['ゆちゃん', 'ルビーちゃん', '何が好き']}}
+
+global_switches:
+  definition: 在[InitVar]的根级别`$meta`中设置的全局开关,用以改变模板功能的默认行为
+  implementation: { '$meta': { 'switch_name': value } }
+  switches:
+    - name: strictTemplate
+      description: 控制是否允许将非数组的字面值隐式转换为数组,以便应用数组模板
+      default: false
+      behavior:
+        - when_false: 允许隐式转换。`_.assign('道具', '万用表', 'abc')` 会将'abc'视为`['abc']`,并与模板数组拼接
+        - when_true: 禁止隐式转换。因为类型不匹配(字符串 vs 数组模板),模板将不会被应用,最终结果仅为"abc"
+
+    - name: concatTemplateArray
+      description: 定义数组模板合并时的具体逻辑是"拼接(concat)"还是"融合(merge)"
+      default: true
+      behavior:
+        - when_true: 拼接:将新数组的全部元素与模板数组的全部元素组合成一个更长的数组
+        - when_false: 融合:对新数组与模板数组中的对象元素,根据键名进行智能合并,而不是简单地将两个数组连接起来
+      example_context:
+        operation: _.assign('道具', '万用表', [{'name': 'ruby'}]);
+        template: [{'name': 'ルビーちゃん'}, '何が好き']
+      results:
+        - when_true_result: [{'name': 'ruby'}, {'name': 'ルビーちゃん'}, '何が好き']
+        - when_false_result: [{'name': 'ruby'}, '何が好き'] (新旧数组中同名键'name'的对象发生了融合)
+</MVU_BETA_Template_and_Global_Switches_Guide>
+
+<MVU_BETA_Operation_Guide>
+anleitung:
+  ziel: 本文件定义了MVU BETA变量系统的核心操作规范。你必须在每次交互后,严格遵循此框架生成`<UpdateVariable>`代码块,以实现对角色状态、世界数据和故事进程的精确、安全、可追溯的动态管理
+  kernprinzipien:
+    - 精确性优先: 所有路径引用都应尽可能精确,以避免歧义
+    - 结构保护: 严禁执行任何可能破坏预定义数据结构的操作
+    - 意图明确: 优先选用语义最明确的命令执行操作
+die_goldene_regel:
+  regel_name: 使用[0]索引器访问复合类型的值
+  beschreibung: 当一个变量的结构为 `[值, '描述']`,且其'值'部分本身是一个对象(Object)或数组(Array)时,所有针对该'值'内部元素的操作,其路径都必须使用 `[0]` 后缀来精确定位到'值'本身
+  begründung: 此规则是为保护变量的'描述'部分不被意外污染,并确保所有操作的绝对精确性。你必须在所有需要访问此类数据的操作中遵循此规则
+  beispiele:
+    - kontext: 假设变量 `福建.舰载机` 的结构为 `[{'可部署':{'歼-15':12}, '补给中':{'歼-35':8}}, '福建号航母的舰载机联队']`
+    - korrekte_anwendung:
+      - _.add('福建.舰载机[0].可部署.歼-15', -2); // 正确: 精确地为'可部署'的歼-15数量减2
+      - _.assign('福建.舰载机[0].补给中', '空警-600', 1); // 正确: 在'补给中'对象里添加一个新机种
+    - falsche_anwendung:
+      - _.add('福建.舰载机.可部署.歼-15', -2); // 错误: 路径无效,操作将被忽略
+befehlsreferenz:
+  - befehl: _.set
+    beschreibung: 用于设置或完全替换一个变量的简单值(字符串、数字、布尔值)
+    syntax: _.set('路径', 旧值, 新值);
+  - befehl: _.add
+    beschreibung: 专用于对数值类型变量进行加减运算。强烈推荐使用此命令代替`_.set`来进行数值增减,以避免计算错误
+    syntax: _.add('路径', 要加上的值);
+  - befehl: _.assign
+    beschreibung: 用于向数组或对象中插入新元素或键值对
+    syntax:
+      - 数组操作: _.assign('数组路径', [索引,] '新元素');
+      - 对象操作: _.assign('对象路径', '新键名', '新值');
+  - befehl: _.remove
+    beschreibung: 用于从数组或对象中删除指定元素,或删除整个变量
+    syntax:
+      - 数组或变量操作: _.remove('数组路径', '要删除的值或索引');
+      - 对象操作: _.remove('对象路径', '要删除的键名');
+aktualisierungs-workflow:
+  beschreibung: 在你的每一次回复内容之后,必须附加一个`<UpdateVariable>`代码块。此代码块是你进行变量更新的唯一途径,必须严格遵循以下思考流程和输出格式
+  denkprozess:
+    - 第一步: 全面分析当前用户的输入与你的回复内容,理解本轮交互中发生的具体事件
+    - 第二步: 在脑中回顾[InitVar]中定义的所有变量及其"更新条件"
+    - 第三步: 在`<Analysis>`区域内,以英文逐一列出所有变量,并基于其更新条件判断是否需要变更(Y/N)
+    - 第四步: 为所有判断为需要更新的变量,编写符合规范的指令行,并以注释形式附上简洁、明确的更新原因
+  formatvorlage: |-
+    <UpdateVariable>
+        <Analysis>
+            - a list of variables from the previous <status_current_variables>...
+            - check each variable's change condition...
+            - for example, `理.好感度[0]: Y` or `理.好感-度[0]: N`
+        </Analysis>
+        _.set('${path}', ${old}?, ${new});//${reason}
+        _.assign('${path}', ${key_or_index}?, ${value});//${reason}
+        _.remove('${path}', ${key_or_index_or_value}?);//${reason}
+        _.add('${path}', ${delta});//${reason}
+    </UpdateVariable>
+  anwendungsbeispiel: |-
+    <UpdateVariable>
+        <Analysis>
+            当前时间[0]: Y
+            悠纪.好感度[0]: Y
+            悠纪.重要成就[0]: Y
+            悠纪.着装[0]: Y
+        </Analysis>
+        _.set('当前时间[0]', '2026-6-1 10:05', '2026-6-1 10:15');//时间流逝
+        _.add('悠纪.好感度[0]', 2);//与悠纪的好感度增加
+        _.assign('悠纪.重要成就[0]', '2026年6月1日,悠纪对{{user}}告白成功');//悠纪对{{user}}成功告白
+        _.remove('悠纪.着装[0]', '粉色缎带');//悠纪脱下粉色缎带
+    </UpdateVariable>
+</MVU_BETA_Operation_Guide>
+</MVU BETA>
