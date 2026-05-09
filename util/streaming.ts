@@ -18,7 +18,7 @@ export function injectStreamingMessageContext(): Readonly<StreamingMessageContex
   return readonly(inject('streaming_message_context')!);
 }
 
-export type StreamingRenderMode = 'replace' | 'stream-only';
+export type StreamingRenderMode = 'replace' | 'stream-only' | 'append-streaming';
 
 /**
  * 将组件作为流式楼层界面挂载到酒馆各个楼层, 替换掉酒馆原生的楼层正文显示.
@@ -38,7 +38,8 @@ export type StreamingRenderMode = 'replace' | 'stream-only';
  *   - `host`: 宿主, 默认为 `'iframe'`, 因为 `'iframe'` 能隔离样式, 更方便做复杂界面
  *   - `filter`: 楼层过滤器. 如果设置, 则只有符合条件的楼层才会被挂载流式楼层界面
  *   - `prefix`: 组件的唯一标识符, 默认随机生成一个. 函数产生的流式楼层界面会共享这个 `prefix`, 并将 `host` DOM 的 id 设置成 `${prefix}-${message_id}`.
- *   - `mode`: 渲染模式. `'replace'` 会长期替换酒馆原生楼层正文; `'stream-only'` 只在流式输出期间临时替换, 输出结束后恢复酒馆原生渲染.
+ *   - `mode`: 渲染模式. `'replace'` 会长期替换酒馆原生楼层正文; `'stream-only'` 只在流式输出期间临时替换, 输出结束后恢复酒馆原生渲染;
+ *     `'append-streaming'` 只在流式输出期间追加显示自定义界面, 从不隐藏酒馆原生渲染.
  * @returns 卸载流式楼层界面的函数
  */
 export function mountStreamingMessages(
@@ -51,6 +52,8 @@ export function mountStreamingMessages(
   } = {},
 ): { unmount: () => void } {
   const { host = 'iframe', filter, prefix = uuidv4(), mode = 'replace' } = options;
+  const only_render_during_streaming = mode === 'stream-only' || mode === 'append-streaming';
+  const should_hide_native = mode === 'replace' || mode === 'stream-only';
 
   const states: Map<number, { app: App; data: Reactive<StreamingMessageContext>; destroy: () => void }> = new Map();
   let has_stoped = false;
@@ -82,15 +85,18 @@ export function mountStreamingMessages(
       return;
     }
 
-    if (mode === 'stream-only' && !stream_message) {
+    if (only_render_during_streaming && !stream_message) {
       states.get(message_id)?.destroy();
       return;
     }
 
     const $message_element = $(`.mes[mesid='${message_id}']`);
 
-    const $mes_text = $message_element.find('.mes_text').addClass('hidden!');
-    $message_element.find('.TH-streaming').addClass('hidden!');
+    const $mes_text = $message_element.find('.mes_text');
+    if (should_hide_native) {
+      $mes_text.addClass('hidden!');
+      $message_element.find('.TH-streaming').addClass('hidden!');
+    }
 
     let $host = $message_element.find(`#${prefix}-${message_id}`);
     if ($host.length > 0) {
@@ -139,25 +145,27 @@ export function mountStreamingMessages(
       app.mount($host[0]);
     }
 
-    const observer = new MutationObserver(() => {
-      const $edit_textarea = $('#chat').find('#curEditTextarea');
-      if ($edit_textarea.parent().is($mes_text)) {
-        $mes_text.removeClass('hidden!');
-        $host.addClass('hidden!');
-      } else if ($edit_textarea.length === 0) {
-        $mes_text.addClass('hidden!');
-        $message_element.find('.TH-streaming').addClass('hidden!');
-        $host.removeClass('hidden!');
-      }
-    });
-    observer.observe($mes_text[0] as HTMLElement, { childList: true });
+    const observer = should_hide_native
+      ? new MutationObserver(() => {
+          const $edit_textarea = $('#chat').find('#curEditTextarea');
+          if ($edit_textarea.parent().is($mes_text)) {
+            $mes_text.removeClass('hidden!');
+            $host.addClass('hidden!');
+          } else if ($edit_textarea.length === 0) {
+            $mes_text.addClass('hidden!');
+            $message_element.find('.TH-streaming').addClass('hidden!');
+            $host.removeClass('hidden!');
+          }
+        })
+      : null;
+    observer?.observe($mes_text[0] as HTMLElement, { childList: true });
 
     states.set(message_id, {
       app,
       data,
       destroy: () => {
         const $th_streaming = $message_element.find('.TH-streaming');
-        if (mode === 'stream-only') {
+        if (only_render_during_streaming) {
           $mes_text.removeClass('hidden!');
           $th_streaming.removeClass('hidden!');
         } else if ($th_streaming.length > 0) {
@@ -171,7 +179,7 @@ export function mountStreamingMessages(
         if ($mes_streaming.children().length === 0) {
           $mes_streaming.remove();
         }
-        observer.disconnect();
+        observer?.disconnect();
         states.delete(message_id);
       },
     });

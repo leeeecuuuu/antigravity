@@ -20,7 +20,7 @@ import './bubble.css';
 $(() => {
   const { unmount } = mountStreamingMessages(() => createApp(App), {
     host: 'div',
-    mode: 'stream-only',
+    mode: 'append-streaming',
     /**
      * 楼层过滤器：只对包含 @bubble: 格式或 <now_plot> 标签的 AI 消息启用流式渲染
      * 其他消息保持酒馆原生渲染
