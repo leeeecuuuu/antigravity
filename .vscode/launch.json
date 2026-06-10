@@ -1,14 +1,21 @@
 {
   "version": "0.2.0",
   "configurations": [
+<<<<<<< HEAD
 
+=======
+>>>>>>> fdfcbc5386747889d0b011123d4dde6612c67d1b
     {
       "name": "编译代码并调试酒馆网页 (Chrome)",
       "type": "chrome",
       "request": "launch",
       "preLaunchTask": "开始任务",
       "postDebugTask": "结束任务",
+<<<<<<< HEAD
       "url": "https://tavern.gachily.site/",
+=======
+      "url": "http://localhost:8000",
+>>>>>>> fdfcbc5386747889d0b011123d4dde6612c67d1b
       "disableNetworkCache": true,
       "internalConsoleOptions": "neverOpen",
       "cwd": "${workspaceFolder}",
