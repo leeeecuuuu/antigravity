@@ -18,8 +18,11 @@ export function injectStreamingMessageContext(): Readonly<StreamingMessageContex
   return readonly(inject('streaming_message_context')!);
 }
 
+<<<<<<< HEAD
 export type StreamingRenderMode = 'replace' | 'stream-only' | 'append-streaming';
 
+=======
+>>>>>>> 4f0b745981550e95a66a32adf5b43f01a2cde104
 /**
  * 将组件作为流式楼层界面挂载到酒馆各个楼层, 替换掉酒馆原生的楼层正文显示.
  *
@@ -38,12 +41,16 @@ export type StreamingRenderMode = 'replace' | 'stream-only' | 'append-streaming'
  *   - `host`: 宿主, 默认为 `'iframe'`, 因为 `'iframe'` 能隔离样式, 更方便做复杂界面
  *   - `filter`: 楼层过滤器. 如果设置, 则只有符合条件的楼层才会被挂载流式楼层界面
  *   - `prefix`: 组件的唯一标识符, 默认随机生成一个. 函数产生的流式楼层界面会共享这个 `prefix`, 并将 `host` DOM 的 id 设置成 `${prefix}-${message_id}`.
+<<<<<<< HEAD
  *   - `mode`: 渲染模式. `'replace'` 会长期替换酒馆原生楼层正文; `'stream-only'` 只在流式输出期间临时替换, 输出结束后恢复酒馆原生渲染;
  *     `'append-streaming'` 只在流式输出期间追加显示自定义界面, 从不隐藏酒馆原生渲染.
+=======
+>>>>>>> 4f0b745981550e95a66a32adf5b43f01a2cde104
  * @returns 卸载流式楼层界面的函数
  */
 export function mountStreamingMessages(
   creator: () => App,
+<<<<<<< HEAD
   options: {
     host?: 'iframe' | 'div';
     filter?: (message_id: number, message: string) => boolean;
@@ -54,6 +61,11 @@ export function mountStreamingMessages(
   const { host = 'iframe', filter, prefix = uuidv4(), mode = 'replace' } = options;
   const only_render_during_streaming = mode === 'stream-only' || mode === 'append-streaming';
   const should_hide_native = mode === 'replace' || mode === 'stream-only';
+=======
+  options: { host?: 'iframe' | 'div'; filter?: (message_id: number, message: string) => boolean; prefix?: string } = {},
+): { unmount: () => void } {
+  const { host = 'iframe', filter, prefix = uuidv4() } = options;
+>>>>>>> 4f0b745981550e95a66a32adf5b43f01a2cde104
 
   const states: Map<number, { app: App; data: Reactive<StreamingMessageContext>; destroy: () => void }> = new Map();
   let has_stoped = false;
@@ -85,6 +97,7 @@ export function mountStreamingMessages(
       return;
     }
 
+<<<<<<< HEAD
     if (only_render_during_streaming && !stream_message) {
       states.get(message_id)?.destroy();
       return;
@@ -97,6 +110,12 @@ export function mountStreamingMessages(
       $mes_text.addClass('hidden!');
       $message_element.find('.TH-streaming').addClass('hidden!');
     }
+=======
+    const $message_element = $(`.mes[mesid='${message_id}']`);
+
+    const $mes_text = $message_element.find('.mes_text').addClass('hidden!');
+    $message_element.find('.TH-streaming').addClass('hidden!');
+>>>>>>> 4f0b745981550e95a66a32adf5b43f01a2cde104
 
     let $host = $message_element.find(`#${prefix}-${message_id}`);
     if ($host.length > 0) {
@@ -145,8 +164,12 @@ export function mountStreamingMessages(
       app.mount($host[0]);
     }
 
+<<<<<<< HEAD
     const observer = should_hide_native
       ? new MutationObserver(() => {
+=======
+    const observer = new MutationObserver(() => {
+>>>>>>> 4f0b745981550e95a66a32adf5b43f01a2cde104
           const $edit_textarea = $('#chat').find('#curEditTextarea');
           if ($edit_textarea.parent().is($mes_text)) {
             $mes_text.removeClass('hidden!');
@@ -156,19 +179,28 @@ export function mountStreamingMessages(
             $message_element.find('.TH-streaming').addClass('hidden!');
             $host.removeClass('hidden!');
           }
+<<<<<<< HEAD
         })
       : null;
     observer?.observe($mes_text[0] as HTMLElement, { childList: true });
+=======
+    });
+    observer.observe($mes_text[0] as HTMLElement, { childList: true });
+>>>>>>> 4f0b745981550e95a66a32adf5b43f01a2cde104
 
     states.set(message_id, {
       app,
       data,
       destroy: () => {
         const $th_streaming = $message_element.find('.TH-streaming');
+<<<<<<< HEAD
         if (only_render_during_streaming) {
           $mes_text.removeClass('hidden!');
           $th_streaming.removeClass('hidden!');
         } else if ($th_streaming.length > 0) {
+=======
+        if ($th_streaming.length > 0) {
+>>>>>>> 4f0b745981550e95a66a32adf5b43f01a2cde104
           $th_streaming.removeClass('hidden!');
         } else {
           $mes_text.removeClass('hidden!');
@@ -179,7 +211,11 @@ export function mountStreamingMessages(
         if ($mes_streaming.children().length === 0) {
           $mes_streaming.remove();
         }
+<<<<<<< HEAD
         observer?.disconnect();
+=======
+        observer.disconnect();
+>>>>>>> 4f0b745981550e95a66a32adf5b43f01a2cde104
         states.delete(message_id);
       },
     });
@@ -251,7 +287,11 @@ export function mountStreamingMessages(
       if ($th_streaming.length > 0) {
         $th_streaming.removeClass('hidden!');
       } else {
+<<<<<<< HEAD
         $('#chat').find('.mes_text').removeClass('hidden!');
+=======
+        $('chat').find('.mes_text').removeClass('hidden!');
+>>>>>>> 4f0b745981550e95a66a32adf5b43f01a2cde104
       }
       states.forEach(({ destroy }) => destroy());
       stop_list.forEach(stop => stop());
